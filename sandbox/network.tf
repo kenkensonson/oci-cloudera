@@ -2,12 +2,12 @@ data "oci_identity_availability_domains" "availability_domains" {
   compartment_id = "${var.tenancy_ocid}"
 }
 
-variable "VPC-CIDR" {
+variable "cidr_block" {
   default = "10.0.0.0/16"
 }
 
 resource "oci_core_virtual_network" "virtual_network" {
-  cidr_block     = "${var.VPC-CIDR}"
+  cidr_block     = "${var.cidr_block}"
   compartment_id = "${var.compartment_ocid}"
   display_name   = "virtual_network"
   dns_label      = "cloudera"
@@ -82,14 +82,14 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules = [{
     protocol = "6"
-    source   = "${var.VPC-CIDR}"
+    source   = "${var.cidr_block}"
   }]
 }
 
 resource "oci_core_subnet" "public" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index], "name")}"
-  cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index)}"
+  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index)}"
   display_name        = "public${count.index}"
   compartment_id      = "${var.compartment_ocid}"
   vcn_id              = "${oci_core_virtual_network.virtual_network.id}"

@@ -2,12 +2,12 @@ data "oci_identity_availability_domains" "availability_domains" {
   compartment_id = "${var.tenancy_ocid}"
 }
 
-variable "VPC-CIDR" {
+variable "cidr_block" {
   default = "10.0.0.0/16"
 }
 
 resource "oci_core_virtual_network" "virtual_network" {
-  cidr_block     = "${var.VPC-CIDR}"
+  cidr_block     = "${var.cidr_block}"
   compartment_id = "${var.compartment_ocid}"
   display_name   = "virtual_network"
   dns_label      = "cloudera"
@@ -72,7 +72,7 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules = [{
     protocol = "6"
-    source   = "${var.VPC-CIDR}"
+    source   = "${var.cidr_block}"
   }]
 }
 
@@ -88,12 +88,12 @@ resource "oci_core_security_list" "private" {
 
   egress_security_rules = [{
     protocol    = "6"
-    destination = "${var.VPC-CIDR}"
+    destination = "${var.cidr_block}"
   }]
 
   ingress_security_rules = [{
     protocol = "6"
-    source   = "${var.VPC-CIDR}"
+    source   = "${var.cidr_block}"
   }]
 }
 
@@ -118,7 +118,7 @@ resource "oci_core_security_list" "bastion" {
   },
     {
       protocol = "6"
-      source   = "${var.VPC-CIDR}"
+      source   = "${var.cidr_block}"
     },
   ]
 }
@@ -126,7 +126,7 @@ resource "oci_core_security_list" "bastion" {
 resource "oci_core_subnet" "public" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
-  cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index)}"
+  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index)}"
   display_name        = "public${count.index}"
   dns_label           = "public${count.index}"
   compartment_id      = "${var.compartment_ocid}"
@@ -139,7 +139,7 @@ resource "oci_core_subnet" "public" {
 resource "oci_core_subnet" "private" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
-  cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+3)}"
+  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index+3)}"
   display_name        = "private${count.index}"
   dns_label           = "private${count.index}"
   compartment_id      = "${var.compartment_ocid}"
@@ -152,7 +152,7 @@ resource "oci_core_subnet" "private" {
 resource "oci_core_subnet" "bastion" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
-  cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+6)}"
+  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index+6)}"
   display_name        = "bastion${count.index}"
   dns_label           = "bastion${count.index}"
   compartment_id      = "${var.compartment_ocid}"
