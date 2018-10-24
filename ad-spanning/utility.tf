@@ -1,6 +1,6 @@
 resource "oci_core_instance" "utility" {
   count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility-${format("%01d", count.index+1)}"
   hostname_label      = "cdh-utility-${format("%01d", count.index+1)}"
@@ -24,7 +24,7 @@ resource "oci_core_instance" "utility" {
 
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
   instance_id         = "${oci_core_instance.utility.id}"
 }
 

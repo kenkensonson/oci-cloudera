@@ -1,6 +1,6 @@
 resource "oci_core_instance" "worker" {
   count               = "${var.worker["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-worker-${format("%01d", count.index+1)}"
   hostname_label      = "cdh-worker-${format("%01d", count.index+1)}"
