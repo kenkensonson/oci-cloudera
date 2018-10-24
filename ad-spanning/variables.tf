@@ -23,8 +23,6 @@ variable "ssh_private_key" {}
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "AD" { default = "2" }
-variable "blocksize_in_gbs" { default = "1024" }
-variable "boot_volume_size" { default = "256" }
 
 variable "bastion" {
   type = "map"
@@ -55,6 +53,7 @@ variable "worker" {
   default = {
     shape = "BM.Standard1.36"
     node_count = 3
+    size_in_gbs = 1024
   }
 }
 
