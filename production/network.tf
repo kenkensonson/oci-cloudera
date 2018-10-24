@@ -142,6 +142,8 @@ resource "oci_core_subnet" "private" {
   route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
   security_list_ids   = ["${oci_core_security_list.PrivateSubnet.id}"]
   dhcp_options_id     = "${oci_core_virtual_network.cloudera_vcn.default_dhcp_options_id}"
+
+  #prohibit_public_ip_on_vnic = "true"
   dns_label = "private${count.index}"
 }
 

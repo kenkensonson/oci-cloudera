@@ -1,5 +1,5 @@
 resource "null_resource" "cdh-setup" {
-  depends_on = ["oci_core_instance.utility", "oci_core_instance.master", "oci_core_instance.worker", "oci_core_instance.bastion"]
+  depends_on = ["oci_core_instance.UtilityNode", "oci_core_instance.MasterNode", "oci_core_instance.WorkerNode", "oci_core_instance.Bastion"]
 
   provisioner "file" {
     source      = "../scripts/"
@@ -15,7 +15,7 @@ resource "null_resource" "cdh-setup" {
   }
 
   provisioner "file" {
-    source      = "~/.ssh/oci"
+    source      = "/home/opc/.ssh/id_rsa"
     destination = "/home/opc/.ssh/id_rsa"
 
     connection {
