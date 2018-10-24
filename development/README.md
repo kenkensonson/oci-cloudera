@@ -1,9 +1,9 @@
 # development
 This is for small implementations.  This deployment consists of five instances:
 
-* 1 Bastion Instance
-* 1 Utility Instance
-* 3 worker Nodes
+* 1 bastion instance
+* 1 utility instance
+* 3 worker nodes
 
 This environment provides a much higher HDFS storage capacity, along with a compute and memory resources for use with a variety of big data workloads.   This environment is not a good fit for users who want high availability.
 
