@@ -9,8 +9,8 @@ This environment provides a much higher HDFS storage capacity, along with a comp
 
 |             | Worker Nodes                                       | Bastion Instance | Utility Instance |
 |-------------|----------------------------------------------------|------------------|------------------|
-| Minimum     | BM.Standard1.16 with 3x700GB Block Storage Devices | VM.Standard1.4   | VM.Standard1.8   |                   
-| Recommended | BM.Standard2.24 with 3x1TB Block Storage Devices   | VM.Standard2.4   | VM.Standard2.8   |
+| Minimum     | VM.Standard1.16 with 3x700GB Block Storage Devices | VM.Standard1.4   | VM.Standard1.8   |                   
+| Recommended | VM.Standard2.24 with 3x1TB Block Storage Devices   | VM.Standard2.4   | VM.Standard2.8   |
 
 ## Password and User Details
 Modify the script `startup.sh` and look for the `MAIN CLUSTER CONFIGURATION` section - this is which you can input your contact information, and set up the Cloudera Manager credentials prior to deployment.
