@@ -38,8 +38,8 @@ host_discovery () {
   ## UTILITY NODE DISCOVERY
   endcheck=1
   while [ "$endcheck" = "1" ]; do
-    for i in `seq 1 3`; do
-      hname=`host cdh-utility-${i}`
+    for i in `seq 0 2`; do
+      hname=`host cdh-utility${i}`
       hchk=$?
       if [ "$hchk" = "1" ]; then
         endcheck="0"
@@ -53,8 +53,8 @@ host_discovery () {
   ## MASTER NODE DISCOVERY
   endcheck=1
   while [ "$endcheck" = "1" ]; do
-    for i in `seq 1 3`; do
-      hname=`host cdh-master-${i}`
+    for i in `seq 0 2`; do
+      hname=`host cdh-master${i}`
       hchk=$?
       if [ "$hchk" = "1" ]; then
         endcheck="0"
@@ -69,7 +69,7 @@ host_discovery () {
   endcheck=1
   i=1
   while [ "$endcheck" != 0 ]; do
-    hname=`host cdh-worker-${i}`
+    hname=`host cdh-worker${i}`
     hchk=$?
     if [ "$hchk" = "1" ]; then
       endcheck="0"
@@ -104,8 +104,8 @@ fi
 # First do some network and host discovery
 host_discovery >> host_list
 cat host_list | grep worker >> datanodes
-utilfqdn=`cat host_list | grep cdh-utility-1`
-w1fqdn=`cat host_list | grep cdh-worker-1`
+utilfqdn=`cat host_list | grep cdh-utility1`
+w1fqdn=`cat host_list | grep cdh-worker1`
 for host in `cat host_list`; do
   h_ip=`dig +short $host`
   echo -e "$h_ip\t$host" >> hosts
