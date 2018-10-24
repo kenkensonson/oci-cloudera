@@ -10,6 +10,9 @@ mip="MASTERIP"
 LOG_FILE="/home/opc/cdh_setup.log"
 ssh_keypath="/home/opc/.ssh/id_rsa"
 
+# slot this in shortly....
+#curl -L http://169.254.169.254/opc/v1/instance/metadata/shape
+
 wprocs=`cat /tmp/wprocs`
 memtotal=`cat /tmp/memtotal`
 if [ $wprocs = "104" ]; then
