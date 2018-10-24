@@ -5,7 +5,7 @@ resource "oci_core_instance" "worker" {
   display_name        = "cdh-worker-${format("%01d", count.index+1)}"
   hostname_label      = "cdh-worker-${format("%01d", count.index+1)}"
   shape               = "${var.worker["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[var.availability_domain]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[count.index%3]}"
 
   source_details {
     source_type = "image"

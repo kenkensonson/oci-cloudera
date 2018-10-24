@@ -5,8 +5,8 @@ resource "oci_core_instance" "utility" {
   display_name        = "cdh-utility-${format("%01d", count.index+1)}"
   hostname_label      = "cdh-utility-${format("%01d", count.index+1)}"
   shape               = "${var.utility["shape"]}"
-  subnet_id           = "${oci_core_subnet.public.*.id[var.availability_domain]}"
-
+  subnet_id           = "${oci_core_subnet.public.*.id[count.index%3]}"
+  
   source_details {
     source_type = "image"
     source_id   = "${var.images[var.region]}"

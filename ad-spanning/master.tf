@@ -5,7 +5,7 @@ resource "oci_core_instance" "master" {
   display_name        = "cdh-master-${format("%01d", count.index)}"
   hostname_label      = "cdh-master-${format("%01d", count.index)}"
   shape               = "${var.master["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[var.availability_domain]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[count.index%3]}"
 
   source_details {
     source_type = "image"

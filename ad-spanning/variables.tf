@@ -22,8 +22,6 @@ variable "ssh_private_key" {}
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "availability_domain" { default = "2" }
-
 variable "bastion" {
   type = "map"
   default = {
