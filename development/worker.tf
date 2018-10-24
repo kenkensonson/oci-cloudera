@@ -1,6 +1,6 @@
 resource "oci_core_instance" "worker" {
   count               = "${var.worker["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-worker-${format("%01d", count.index+1)}"
   hostname_label      = "cdh-worker-${format("%01d", count.index+1)}"
@@ -24,7 +24,7 @@ resource "oci_core_instance" "worker" {
 
 resource "oci_core_volume" "worker" {
   count               = "${var.worker["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-worker${format("%01d", count.index+1)}"
   size_in_gbs         = "${var.worker["size_in_gbs"]}"

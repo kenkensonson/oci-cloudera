@@ -1,6 +1,6 @@
 resource "oci_core_instance" "master" {
   count               = "${var.master["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-master-${format("%01d", count.index)}"
   hostname_label      = "cdh-master-${format("%01d", count.index)}"

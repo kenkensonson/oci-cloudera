@@ -1,5 +1,5 @@
 resource "oci_core_instance" "bastion" {
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-bastion"
   hostname_label      = "cdh-bastion"
@@ -23,7 +23,7 @@ resource "oci_core_instance" "bastion" {
 
 data "oci_core_vnic_attachments" "bastion_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   instance_id         = "${oci_core_instance.bastion.id}"
 }
 

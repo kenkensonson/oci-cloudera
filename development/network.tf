@@ -1,4 +1,4 @@
-data "oci_identity_availability_domains" "ADs" {
+data "oci_identity_availability_domains" "availability_domains" {
   compartment_id = "${var.tenancy_ocid}"
 }
 
@@ -125,7 +125,7 @@ resource "oci_core_security_list" "BastionSubnet" {
 
 resource "oci_core_subnet" "public" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index)}"
   display_name        = "public_${count.index}"
   compartment_id      = "${var.compartment_ocid}"
@@ -138,7 +138,7 @@ resource "oci_core_subnet" "public" {
 
 resource "oci_core_subnet" "private" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+3)}"
   display_name        = "private_ad${count.index}"
   compartment_id      = "${var.compartment_ocid}"
@@ -151,7 +151,7 @@ resource "oci_core_subnet" "private" {
 
 resource "oci_core_subnet" "bastion" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+6)}"
   display_name        = "bastion_ad${count.index}"
   compartment_id      = "${var.compartment_ocid}"
