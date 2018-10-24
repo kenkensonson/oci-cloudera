@@ -26,6 +26,10 @@ variable "AD" { default = "2" }
 variable "blocksize_in_gbs" { default = "1024" }
 variable "boot_volume_size" { default = "256" }
 
+variable "AD" { default = "2" }
+variable "blocksize_in_gbs" { default = "1024" }
+variable "boot_volume_size" { default = "256" }
+
 variable "bastion" {
   type = "map"
   default = {
@@ -34,11 +38,27 @@ variable "bastion" {
   }
 }
 
+variable "utility" {
+  type = "map"
+  default = {
+    shape = "VM.Standard2.8"
+    node_count = 1
+  }
+}
+
+variable "master" {
+  type = "map"
+  default = {
+    shape = "VM.Standard2.8"
+    node_count = 2
+  }
+}
+
 variable "worker" {
   type = "map"
   default = {
     shape = "BM.Standard1.36"
-    node_count = 3
+    node_count = 5
   }
 }
 
