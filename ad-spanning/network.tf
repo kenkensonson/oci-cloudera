@@ -1,3 +1,7 @@
+data "oci_identity_availability_domains" "ADs" {
+  compartment_id = "${var.tenancy_ocid}"
+}
+
 variable "VPC-CIDR" {
   default = "10.0.0.0/16"
 }
