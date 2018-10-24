@@ -6,16 +6,11 @@ This is the most powerful preconfigured option.  It provides high density, high 
 | Minimum     | BM.DenseIO1.36 | VM.Standard1.4           | VM.Standard1.8               |                                
 | Recommended | BM.DenseIO2.52 | VM.Standard2.4           | VM.Standard2.8               |                                   
 
-## Prerequisites
-Installation has a dependency on Terraform being installed and configured for the user tenancy.   As such an "env-vars" file is included with this package that contains all the necessary environment variables.  This file should be updated with the appropriate values prior to installation.  To source this file prior to installation, either reference it in your .rc file for your shell's or run the following:
-
-    source env-vars
-
 ## Password and User Details
 Modify `startup.sh` and look for the `MAIN CLUSTER CONFIGURATION` section - this is which you can input your contact information, and set up the Cloudera Manager credentials prior to deployment.
 
 ## Deployment
-Deploy using standard Terraform commands
+Deploy using standard Terraform commands:
 
     terraform init
     terraform plan

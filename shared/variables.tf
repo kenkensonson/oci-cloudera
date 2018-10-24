@@ -22,36 +22,25 @@ variable "ssh_private_key" {}
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "AD" {
-  default = "2"
+variable "AD" { default = "2" }
+variable "boot_volume_size" { default = "256" }
+variable "blocksize_in_gbs" { default = "1024" }
+variable "bastion_shape" { default = "VM.Standard2.8" }
+
+variable "master" {
+  type = "map"
+  default = {
+    shape = "VM.Standard2.8"
+    node_count = 2
+  }
 }
 
-variable "nodecount" {
-  default = "5"
-}
-
-variable "MasterNodeCount" {
-  default = "2"
-}
-
-variable "boot_volume_size" {
-  default = "256"
-}
-
-variable "blocksize_in_gbs" {
-  default = "1024"
-}
-
-variable "BastionInstanceShape" {
-  default = "VM.Standard2.8"
-}
-
-variable "MasterInstanceShape" {
-  default = "VM.Standard2.8"
-}
-
-variable "WorkerInstanceShape" {
-  default = "BM.DenseIO2.52"
+variable "worker" {
+  type = "map"
+  default = {
+    shape = "BM.Standard1.36"
+    node_count = 5
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -61,7 +50,7 @@ variable "WorkerInstanceShape" {
 
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
 // Oracle-provided image "CentOS-7.5-2018.06.22-0"
-variable "InstanceImageOCID" {
+variable "images" {
   type = "map"
   default = {
     eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaasdvfvvgzjhqpuwmjbypgovachdgwvcvus5n4p64fajmbassg2pqa"

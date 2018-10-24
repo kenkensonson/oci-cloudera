@@ -10,6 +10,9 @@ mip="MASTERIP"
 LOG_FILE="/home/opc/cdh_setup.log"
 ssh_keypath="/home/opc/.ssh/id_rsa"
 
+# slot this in shortly....
+#curl -L http://169.254.169.254/opc/v1/instance/metadata/shape
+
 wprocs=`cat /tmp/wprocs`
 memtotal=`cat /tmp/memtotal`
 if [ $wprocs = "104" ]; then
@@ -62,7 +65,7 @@ COMPANY="Oracle"
 
 ## MAIN
 echo "Installing Postgres, Python, Paramiko..."
-yum install postgresql-server python-pip python-paramiko.noarch -y
+yum install -y postgresql-server python-pip python-paramiko.noarch
 
 echo "Configuring Postgres Database..."
 bash /home/opc/install-postgresql.sh >> /var/log/postgresql_cdh_setup.log
@@ -70,7 +73,7 @@ bash /home/opc/install-postgresql.sh >> /var/log/postgresql_cdh_setup.log
 echo "Installing CM API via PIP plus dependencies..."
 pip install --upgrade pip
 pip install pyopenssl ndg-httpsclient pyasn1
-yum install libffi-devel -y
+yum install -y libffi-devel
 pip install "cm_api<20"
 
 echo "Starting SCM Server..."

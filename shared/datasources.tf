@@ -5,19 +5,19 @@ data "oci_identity_availability_domains" "ADs" {
 data "oci_core_vnic_attachments" "bastion_vnics" {
   compartment_id      = "${var.compartment_ocid}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1],"name")}"
-  instance_id         = "${oci_core_instance.Bastion.id}"
+  instance_id         = "${oci_core_instance.bastion.id}"
 }
 
-data "oci_core_vnic_attachments" "utility_node_vnics" {
+data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1],"name")}"
-  instance_id         = "${oci_core_instance.UtilityNode.id}"
+  instance_id         = "${oci_core_instance.utility.id}"
 }
 
 data "oci_core_vnic" "bastion_vnic" {
   vnic_id = "${lookup(data.oci_core_vnic_attachments.bastion_vnics.vnic_attachments[0],"vnic_id")}"
 }
 
-data "oci_core_vnic" "utility_node_vnic" {
-  vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_node_vnics.vnic_attachments[0],"vnic_id")}"
+data "oci_core_vnic" "utility_vnic" {
+  vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_vnics.vnic_attachments[0],"vnic_id")}"
 }
