@@ -22,18 +22,18 @@ resource "oci_core_instance" "master" {
   }
 }
 
-resource "oci_core_volume" "MasterVolume1" {
-  count               = "${var.MasterNodeCount}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1],"name")}"
+resource "oci_core_volume" "master" {
+  count               = "${var.master["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "CDH Master ${format("%01d", count.index+1)} Volume 1"
-  size_in_gbs         = "${var.blocksize_in_gbs}"
+  display_name        = "cdh-master${format("%01d", count.index+1)}"
+  size_in_gbs         = "${var.master["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "MasterAttachment1" {
-  count           = "${var.MasterNodeCount}"
+resource "oci_core_volume_attachment" "master" {
+  count           = "${var.master["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.MasterNode.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.MasterVolume1.*.id[count.index]}"
+  instance_id     = "${oci_core_instance.master.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.master.*.id[count.index]}"
 }
