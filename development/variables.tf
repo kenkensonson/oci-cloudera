@@ -26,10 +26,6 @@ variable "AD" { default = "2" }
 variable "blocksize_in_gbs" { default = "1024" }
 variable "boot_volume_size" { default = "256" }
 
-variable "AD" { default = "2" }
-variable "blocksize_in_gbs" { default = "1024" }
-variable "boot_volume_size" { default = "256" }
-
 variable "bastion" {
   type = "map"
   default = {
