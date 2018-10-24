@@ -45,5 +45,5 @@ resource "oci_core_volume_attachment" "utility" {
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.utilty.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.utility.*.id[count.index]}"
 }

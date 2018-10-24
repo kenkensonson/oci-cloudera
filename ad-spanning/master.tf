@@ -8,8 +8,8 @@ resource "oci_core_instance" "master" {
   subnet_id           = "${oci_core_subnet.private.*.id[var.availability_domain]}"
 
   source_details {
-    source_type             = "image"
-    source_id               = "${var.images[var.region]}"
+    source_type = "image"
+    source_id   = "${var.images[var.region]}"
   }
 
   metadata {
