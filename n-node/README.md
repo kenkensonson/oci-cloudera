@@ -1,6 +1,4 @@
 # n-node
-This module deploys a cluster of arbitrary size.
-
-Storage is on ???
+Worker nodes use NVMe drives for storage.  Master and utility nodes have a 1TB block drive.
 
 Nodes are all placed in a single availability domain.
