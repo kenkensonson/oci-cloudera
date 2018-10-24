@@ -85,7 +85,7 @@ host_discovery () {
 ## Set this flag to 1 to enable host firewalls, 0 to disable
 firewall_on="0"
 
-### Main execution below this point - all tasks are initiated from Bastion host inside screen session called from remote-exec ##
+### Main execution below this point - all tasks are initiated from bastion host inside screen session called from remote-exec
 cd /home/opc/
 
 ## Set DNS to resolve all subnet domains
@@ -101,7 +101,7 @@ if [ -f host_list ]; then
 fi
 
 ## Continue with Main Setup
-# First do some network & host discovery
+# First do some network and host discovery
 host_discovery >> host_list
 cat host_list | grep worker >> datanodes
 utilfqdn=`cat host_list | grep cdh-utility-1`
@@ -111,11 +111,11 @@ for host in `cat host_list`; do
   echo -e "$h_ip\t$host" >> hosts
 done;
 
-## REFACTOR THE NETWORK LOOKUP FOR MULTI AD SUPPORT - OR JUST WHITELIST KNOWN SUBNET 10.0.0.0/16 - Only needed for Firewall Enabled
+## Whitelist known subnet 10.0.0.0/16
+# This is only needed if the firewall is enabled
 unset local_network
 if [ -f hosts ]; then
   local_network="10.0.0.0/16"
-  #local_network=`cat hosts | grep -w "cdh-worker-1" | gawk '{print $1}' | cut -d '.' -f 1-3`
 fi
 master_ip=`dig +short ${utilfqdn}`
 sed -i "s/MASTERIP/$master_ip/g" startup.sh
@@ -127,15 +127,15 @@ for host in `cat host_list | gawk -F '.' '{print $1}'`; do
   host_ip=`cat hosts | grep $host | gawk '{print $1}'`
   ssh_check
   echo -e "Copying Setup Scripts...\n"
-  ## Copy Setup scripts
+  ## Copy setup scripts
   scp -o BatchMode=yes -o StrictHostkeyChecking=no -i /home/opc/.ssh/id_rsa /home/opc/hosts opc@$hostfqdn:~/
   scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa /home/opc/iscsi.sh opc@$hostfqdn:~/
   scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa /home/opc/node_prep.sh opc@$hostfqdn:~/
   scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa /home/opc/tune.sh opc@$hostfqdn:~/
   scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa /home/opc/disk_setup.sh opc@$hostfqdn:~/
-  ## Set Execute Flag on scripts
+  ## Set execute flag on scripts
   ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@$hostfqdn 'chmod +x *.sh'
-  ## Execute Node Prep
+  ## Execute node prep
   ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@$hostfqdn 'sudo ./node_prep.sh &'
   ## Firewall Setup
   if [ $firewall_on = "1" ]; then
@@ -208,7 +208,7 @@ echo -e "${memtotal}GB of RAM detected..."
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@${utilfqdn} "echo $wprocs > /tmp/wprocs"
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@${utilfqdn} "echo $memtotal > /tmp/memtotal"
 
-## Finish Cluster Setup Below
+## Finish cluster setup below
 echo -e "Pre-Install Bootstrapping Complete..."
 hostfqdn="$utilfqdn"
 user="root"
