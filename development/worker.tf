@@ -22,7 +22,7 @@ resource "oci_core_instance" "worker" {
   }
 }
 
-resource "oci_core_volume" "worker1" {
+resource "oci_core_volume" "worker" {
   count               = "${var.worker["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
@@ -30,7 +30,7 @@ resource "oci_core_volume" "worker1" {
   size_in_gbs         = "${var.worker["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "worker1" {
+resource "oci_core_volume_attachment" "worker" {
   count           = "${var.worker["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
