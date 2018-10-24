@@ -1,5 +1,5 @@
 # development
-This deployment is for small implementations.  It consists of five instances:
+This deployment is for small implementations.  It consists of:
 
 * 1 bastion instance
 * 1 utility instance
