@@ -1,16 +1,15 @@
-resource "oci_core_instance" "WorkerNode" {
-  count               = "${var.nodecount}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1],"name")}"
+resource "oci_core_instance" "worker" {
+  count               = "${var.worker["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "CDH Worker ${format("%01d", count.index+1)}"
-  hostname_label      = "CDH-Worker-${format("%01d", count.index+1)}"
-  shape               = "${var.WorkerInstanceShape}"
-  subnet_id           = "${oci_core_subnet.private.*.id[var.AD - 1]}"
+  display_name        = "cdh-worker-${format("%01d", count.index+1)}"
+  hostname_label      = "cdh-worker-${format("%01d", count.index+1)}"
+  shape               = "${var.worker["shape"]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[var.availability_domain]}"
 
   source_details {
-    source_type             = "image"
-    source_id               = "${var.InstanceImageOCID[var.region]}"
-    boot_volume_size_in_gbs = "${var.boot_volume_size}"
+    source_type = "image"
+    source_id   = "${var.images[var.region]}"
   }
 
   metadata {
