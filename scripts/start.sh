@@ -29,5 +29,6 @@ EOF
 echo -e "Starting Master Cluster Provisioning Process"
 sudo screen -dmLS bastion
 sleep .001
+
 ## Start Bastion setup script, time it so the cluster build time is tracked
 sudo screen -S bastion -t setup -X stuff '/usr/bin/time /home/opc/bastion.sh\n'

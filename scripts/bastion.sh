@@ -1,5 +1,4 @@
 #!/bin/bash
-#### Bastion Master Setup Script
 
 ssh_check () {
   ssh_chk="1"
