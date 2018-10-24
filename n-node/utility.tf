@@ -32,18 +32,18 @@ data "oci_core_vnic" "utility_vnic" {
   vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_vnics.vnic_attachments[0], "vnic_id")}"
 }
 
-resource "oci_core_volume" "UtilityVolume" {
-  count               = "1"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1],"name")}"
+resource "oci_core_volume" "utility" {
+  count               = "${var.utility["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "CDH Utility Volume"
-  size_in_gbs         = "${var.blocksize_in_gbs}"
+  display_name        = "cdh-utility${format("%01d", count.index+1)}"
+  size_in_gbs         = "${var.utility["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "UtilityAttachment" {
-  count           = "1"
+resource "oci_core_volume_attachment" "utility" {
+  count           = "${var.utility["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.UtilityNode.id}"
-  volume_id       = "${oci_core_volume.UtilityVolume.id}"
+  instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.utilty.*.id[count.index]}"
 }
