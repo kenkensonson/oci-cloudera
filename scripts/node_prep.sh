@@ -2,7 +2,7 @@
 
 ## Modify resolv.conf to ensure DNS lookups work
 sudo rm -f /etc/resolv.conf
-sudo echo "search public1.cloudera.oraclevcn.com public2.cloudera.oraclevcn.com public3.cloudera.oraclevcn.com private1.cloudera.oraclevcn.com private2.clodera.oraclevcn.com private3.cloudera.oraclevcn.com bastion1.cloudera.oraclevcn.com bastion2.cloudera.oraclevcn.com bastion3.cloudera.oraclevcn.com" > /etc/resolv.conf
+sudo echo "search public0.cloudera.oraclevcn.com public1.cloudera.oraclevcn.com public2.cloudera.oraclevcn.com private0.cloudera.oraclevcn.com private1.clodera.oraclevcn.com private2.cloudera.oraclevcn.com bastion0.cloudera.oraclevcn.com bastion1.cloudera.oraclevcn.com bastion2.cloudera.oraclevcn.com" > /etc/resolv.conf
 sudo echo "nameserver 169.254.169.254" >> /etc/resolv.conf
 
 sudo yum install -y screen.x86_64

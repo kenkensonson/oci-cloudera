@@ -21,3 +21,19 @@ resource "oci_core_instance" "master" {
     create = "30m"
   }
 }
+
+resource "oci_core_volume" "master" {
+  count               = "${var.master["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "cdh-master${count.index}"
+  size_in_gbs         = "${var.master["size_in_gbs"]}"
+}
+
+resource "oci_core_volume_attachment" "master" {
+  count           = "${var.master["node_count"]}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.master.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.master.*.id[count.index]}"
+}
