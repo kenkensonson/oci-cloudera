@@ -22,25 +22,7 @@ variable "ssh_private_key" {}
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "AD" { default = "2" }
-variable "blocksize_in_gbs" { default = "1024" }
-variable "boot_volume_size" { default = "256" }
-
-variable "bastion" {
-  type = "map"
-  default = {
-    shape = "VM.Standard2.8"
-    node_count = 1
-  }
-}
-
-variable "utility" {
-  type = "map"
-  default = {
-    shape = "VM.Standard2.8"
-    node_count = 1
-  }
-}
+variable "availability_domain" { default = "2" }
 
 variable "master" {
   type = "map"
@@ -54,7 +36,8 @@ variable "worker" {
   type = "map"
   default = {
     shape = "BM.Standard1.36"
-    node_count = 5
+    node_count = 3
+    size_in_gbs = "1024"
   }
 }
 

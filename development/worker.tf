@@ -1,16 +1,15 @@
 resource "oci_core_instance" "worker" {
   count               = "${var.worker["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "CDH Worker ${format("%01d", count.index+1)}"
-  hostname_label      = "CDH-Worker-${format("%01d", count.index+1)}"
+  display_name        = "cdh-worker-${format("%01d", count.index+1)}"
+  hostname_label      = "cdh-worker-${format("%01d", count.index+1)}"
   shape               = "${var.worker["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[var.AD - 1]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[var.availability_domain]}"
 
   source_details {
-    source_type             = "image"
-    source_id               = "${var.images[var.region]}"
-    boot_volume_size_in_gbs = "${var.boot_volume_size}"
+    source_type = "image"
+    source_id   = "${var.images[var.region]}"
   }
 
   metadata {
@@ -25,13 +24,13 @@ resource "oci_core_instance" "worker" {
 
 resource "oci_core_volume" "worker1" {
   count               = "${var.worker["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.AD - 1], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "CDH Worker ${format("%01d", count.index+1)} Volume 1"
-  size_in_gbs         = "${var.blocksize_in_gbs}"
+  display_name        = "cdh-worker${format("%01d", count.index+1)}-volume1"
+  size_in_gbs         = "${var.worker["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "WorkerAttachment1" {
+resource "oci_core_volume_attachment" "worker1" {
   count           = "${var.worker["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
