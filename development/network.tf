@@ -10,7 +10,7 @@ resource "oci_core_virtual_network" "virtual_network" {
   cidr_block     = "${var.VPC-CIDR}"
   compartment_id = "${var.compartment_ocid}"
   display_name   = "virtual_network"
-  dns_label      = "cloudera"
+  dns_label      = "cdhvcn"
 }
 
 resource "oci_core_internet_gateway" "internet_gateway" {

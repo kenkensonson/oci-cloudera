@@ -1,4 +1,4 @@
-data "oci_identity_availability_domains" "ADs" {
+data "oci_identity_availability_domains" "availability_domains" {
   compartment_id = "${var.tenancy_ocid}"
 }
 
@@ -6,34 +6,34 @@ variable "VPC-CIDR" {
   default = "10.0.0.0/16"
 }
 
-resource "oci_core_virtual_network" "cloudera_vcn" {
+resource "oci_core_virtual_network" "virtual_network" {
   cidr_block     = "${var.VPC-CIDR}"
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "cloudera_vcn"
-  dns_label      = "cdhvcn"
+  display_name   = "virtual_network"
+  dns_label      = "cloudera"
 }
 
-resource "oci_core_internet_gateway" "cloudera_internet_gateway" {
+resource "oci_core_internet_gateway" "internet_gateway" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "cloudera_internet_gateway"
-  vcn_id         = "${oci_core_virtual_network.cloudera_vcn.id}"
+  display_name   = "internet_gateway"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 }
 
-resource "oci_core_route_table" "RouteForComplete" {
+resource "oci_core_route_table" "route_table" {
   compartment_id = "${var.compartment_ocid}"
-  vcn_id         = "${oci_core_virtual_network.cloudera_vcn.id}"
-  display_name   = "RouteTableForComplete"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
+  display_name   = "route_table"
 
   route_rules {
     destination       = "0.0.0.0/0"
-    network_entity_id = "${oci_core_internet_gateway.cloudera_internet_gateway.id}"
+    network_entity_id = "${oci_core_internet_gateway.internet_gateway.id}"
   }
 }
 
-resource "oci_core_security_list" "PublicSubnet" {
+resource "oci_core_security_list" "public" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "Public Subnet"
-  vcn_id         = "${oci_core_virtual_network.cloudera_vcn.id}"
+  display_name   = "public"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 
   egress_security_rules = [{
     destination = "0.0.0.0/0"
@@ -76,10 +76,10 @@ resource "oci_core_security_list" "PublicSubnet" {
   }]
 }
 
-resource "oci_core_security_list" "PrivateSubnet" {
+resource "oci_core_security_list" "private" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "Private"
-  vcn_id         = "${oci_core_virtual_network.cloudera_vcn.id}"
+  display_name   = "private"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 
   egress_security_rules = [{
     destination = "0.0.0.0/0"
@@ -97,10 +97,10 @@ resource "oci_core_security_list" "PrivateSubnet" {
   }]
 }
 
-resource "oci_core_security_list" "BastionSubnet" {
+resource "oci_core_security_list" "bastion" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "Bastion"
-  vcn_id         = "${oci_core_virtual_network.cloudera_vcn.id}"
+  display_name   = "bastion"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 
   egress_security_rules = [{
     protocol    = "6"
@@ -125,41 +125,39 @@ resource "oci_core_security_list" "BastionSubnet" {
 
 resource "oci_core_subnet" "public" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index)}"
-  display_name        = "public_${count.index}"
-  compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.cloudera_vcn.id}"
-  route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
-  security_list_ids   = ["${oci_core_security_list.PublicSubnet.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.cloudera_vcn.default_dhcp_options_id}"
+  display_name        = "public${count.index}"
   dns_label           = "public${count.index}"
+  compartment_id      = "${var.compartment_ocid}"
+  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
+  route_table_id      = "${oci_core_route_table.route_table.id}"
+  security_list_ids   = ["${oci_core_security_list.public.id}"]
+  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
 }
 
 resource "oci_core_subnet" "private" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+3)}"
-  display_name        = "private_ad${count.index}"
+  display_name        = "private${count.index}"
+  dns_label           = "private${count.index}"
   compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.cloudera_vcn.id}"
-  route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
-  security_list_ids   = ["${oci_core_security_list.PrivateSubnet.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.cloudera_vcn.default_dhcp_options_id}"
-
-  #prohibit_public_ip_on_vnic = "true"
-  dns_label = "private${count.index}"
+  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
+  route_table_id      = "${oci_core_route_table.route_table.id}"
+  security_list_ids   = ["${oci_core_security_list.private.id}"]
+  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
 }
 
 resource "oci_core_subnet" "bastion" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index+6)}"
-  display_name        = "bastion_ad${count.index}"
-  compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.cloudera_vcn.id}"
-  route_table_id      = "${oci_core_route_table.RouteForComplete.id}"
-  security_list_ids   = ["${oci_core_security_list.BastionSubnet.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.cloudera_vcn.default_dhcp_options_id}"
+  display_name        = "bastion${count.index}"
   dns_label           = "bastion${count.index}"
+  compartment_id      = "${var.compartment_ocid}"
+  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
+  route_table_id      = "${oci_core_route_table.route_table.id}"
+  security_list_ids   = ["${oci_core_security_list.bastion.id}"]
+  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
 }
