@@ -37,37 +37,38 @@ ssh_check () {
 host_discovery () {
   ## UTILITY NODE DISCOVERY
   endcheck=1
-  while [ "$endcheck" = "1" ]; do
-    for i in `seq 0 2`; do
-      hname=`host cdh-utility${i}`
-      hchk=$?
-      if [ "$hchk" = "1" ]; then
-        endcheck="0"
-      else
-        echo "$hname" | head -n 1 | gawk '{print $1}'
-        endcheck="1"
-      fi
-    done;
+  i=0
+  while [ "$endcheck" != 0 ]; do
+    hname=`host cdh-utility${i}`
+    hchk=$?
+    if [ "$hchk" = "1" ]; then
+      endcheck="0"
+    else
+      echo "$hname" | head -n 1 | gawk '{print $1}'
+      endcheck="1"
+    fi
+    i=$((i+1))
   done;
+
 
   ## MASTER NODE DISCOVERY
   endcheck=1
-  while [ "$endcheck" = "1" ]; do
-    for i in `seq 0 2`; do
-      hname=`host cdh-master${i}`
-      hchk=$?
-      if [ "$hchk" = "1" ]; then
-        endcheck="0"
-      else
-        echo "$hname" | head -n 1 | gawk '{print $1}'
-        endcheck="1"
-      fi
-    done;
+  i=0
+  while [ "$endcheck" != 0 ]; do
+    hname=`host cdh-master${i}`
+    hchk=$?
+    if [ "$hchk" = "1" ]; then
+      endcheck="0"
+    else
+      echo "$hname" | head -n 1 | gawk '{print $1}'
+      endcheck="1"
+    fi
+    i=$((i+1))
   done;
 
   ## WORKER NODE DISCOVERY
   endcheck=1
-  i=1
+  i=0
   while [ "$endcheck" != 0 ]; do
     hname=`host cdh-worker${i}`
     hchk=$?
@@ -80,10 +81,6 @@ host_discovery () {
     i=$((i+1))
   done;
 }
-
-### Firewall Configuration
-## Set this flag to 1 to enable host firewalls, 0 to disable
-firewall_on="0"
 
 ### Main execution below this point - all tasks are initiated from bastion host inside screen session called from remote-exec
 cd /home/opc/
@@ -104,8 +101,8 @@ fi
 # First do some network and host discovery
 host_discovery >> host_list
 cat host_list | grep worker >> datanodes
-utilfqdn=`cat host_list | grep cdh-utility1`
-w1fqdn=`cat host_list | grep cdh-worker1`
+utilfqdn=`cat host_list | grep cdh-utility0`
+w1fqdn=`cat host_list | grep cdh-worker0`
 for host in `cat host_list`; do
   h_ip=`dig +short $host`
   echo -e "$h_ip\t$host" >> hosts
@@ -138,6 +135,7 @@ for host in `cat host_list | gawk -F '.' '{print $1}'`; do
   ## Execute node prep
   ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@$hostfqdn 'sudo ./node_prep.sh &'
   ## Firewall Setup
+  firewall_on="0"
   if [ $firewall_on = "1" ]; then
     if [ -z "$local_network" ]; then
       echo -ne "\tSetting up Firewall Ports [ "
