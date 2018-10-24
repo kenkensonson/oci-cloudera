@@ -1,35 +1,39 @@
+data "oci_identity_availability_domains" "availability_domains" {
+  compartment_id = "${var.tenancy_ocid}"
+}
+
 variable "VPC-CIDR" {
   default = "10.0.0.0/16"
 }
 
-resource "oci_core_virtual_network" "cloudera_virtual_network" {
+resource "oci_core_virtual_network" "virtual_network" {
   cidr_block     = "${var.VPC-CIDR}"
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "cloudera_virtual_network"
-  dns_label      = "cdhvcn"
+  display_name   = "virtual_network"
+  dns_label      = "cloudera"
 }
 
-resource "oci_core_internet_gateway" "cloudera_internet_gateway" {
+resource "oci_core_internet_gateway" "internet_gateway" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "cloudera_internet_gateway"
-  vcn_id         = "${oci_core_virtual_network.cloudera_virtual_network.id}"
+  display_name   = "internet_gateway"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 }
 
-resource "oci_core_route_table" "cloudera_route_table" {
+resource "oci_core_route_table" "route_table" {
   compartment_id = "${var.compartment_ocid}"
-  vcn_id         = "${oci_core_virtual_network.cloudera_virtual_network.id}"
-  display_name   = "cloudera_route_table"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
+  display_name   = "route_table"
 
   route_rules {
     destination       = "0.0.0.0/0"
-    network_entity_id = "${oci_core_internet_gateway.cloudera_internet_gateway.id}"
+    network_entity_id = "${oci_core_internet_gateway.internet_gateway.id}"
   }
 }
 
 resource "oci_core_security_list" "public" {
   compartment_id = "${var.compartment_ocid}"
   display_name   = "public"
-  vcn_id         = "${oci_core_virtual_network.cloudera_virtual_network.id}"
+  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 
   egress_security_rules = [{
     destination = "0.0.0.0/0"
@@ -84,13 +88,13 @@ resource "oci_core_security_list" "public" {
 
 resource "oci_core_subnet" "public" {
   count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[count.index], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index], "name")}"
   cidr_block          = "${cidrsubnet(var.VPC-CIDR, 8, count.index)}"
-  display_name        = "public${count.index + 1}"
+  display_name        = "public${count.index}"
   compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.cloudera_virtual_network.id}"
-  route_table_id      = "${oci_core_route_table.cloudera_route_table.id}"
+  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
+  route_table_id      = "${oci_core_route_table.route_table.id}"
   security_list_ids   = ["${oci_core_security_list.public.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.cloudera_virtual_network.default_dhcp_options_id}"
-  dns_label           = "public${count.index + 1}"
+  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
+  dns_label           = "public${count.index}"
 }

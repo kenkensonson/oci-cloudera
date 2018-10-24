@@ -22,12 +22,8 @@ variable "ssh_private_key" {}
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "AD" {
+variable "availability_domain" {
   default = "2"
-}
-
-variable "boot_volume_size" {
-  default = "256"
 }
 
 variable "blocksize_in_gbs" {
@@ -41,7 +37,7 @@ variable "blocksize_in_gbs" {
 
 // See https://docs.us-phoenix-1.oraclecloud.com/images/
 // Oracle-provided image "CentOS-7.5-2018.06.22-0"
-variable "InstanceImageOCID" {
+variable "images" {
   type = "map"
   default = {
     eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaasdvfvvgzjhqpuwmjbypgovachdgwvcvus5n4p64fajmbassg2pqa"

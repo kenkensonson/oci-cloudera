@@ -1,5 +1,5 @@
 resource "null_resource" "cdh-setup" {
-  depends_on = ["oci_core_instance.Sandbox"]
+  depends_on = ["oci_core_instance.sandbox"]
 
   provisioner "file" {
     source      = "scripts/remote-exec.sh"

@@ -1,10 +1,9 @@
-resource "oci_core_instance" "utility" {
-  count               = "${var.utility["node_count"]}"
+resource "oci_core_instance" "sandbox" {
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "cdh-utility${count.index}"
-  hostname_label      = "cdh-utility${count.index}"
-  shape               = "${var.utility["shape"]}"
+  display_name        = "cdh-sandbox"
+  hostname_label      = "cdh-sandbox"
+  shape               = "VM.Standard2.8"
   subnet_id           = "${oci_core_subnet.public.*.id[var.availability_domain]}"
 
   source_details {
@@ -14,7 +13,7 @@ resource "oci_core_instance" "utility" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data           = "${base64encode(file("../scripts/boot.sh"))}"
+    user_data           = "${base64encode(file("scripts/cloud-init.sh"))}"
   }
 
   timeouts {
@@ -22,12 +21,12 @@ resource "oci_core_instance" "utility" {
   }
 }
 
-data "oci_core_vnic_attachments" "utility_vnics" {
+data "oci_core_vnic_attachments" "sandbox_vnics" {
   compartment_id      = "${var.compartment_ocid}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
-  instance_id         = "${oci_core_instance.utility.id}"
+  instance_id         = "${oci_core_instance.sandbox.id}"
 }
 
-data "oci_core_vnic" "utility_vnic" {
-  vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_vnics.vnic_attachments[0], "vnic_id")}"
+data "oci_core_vnic" "sandbox_vnic" {
+  vnic_id = "${lookup(data.oci_core_vnic_attachments.sandbox_vnics.vnic_attachments[0], "vnic_id")}"
 }
