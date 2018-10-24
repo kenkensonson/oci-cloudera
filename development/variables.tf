@@ -24,18 +24,34 @@ variable "ssh_private_key" {}
 
 variable "availability_domain" { default = "2" }
 
+variable "bastion" {
+  type = "map"
+  default = {
+    shape = "VM.Standard2.4"
+    node_count = 1
+  }
+}
+
+variable "utility" {
+  type = "map"
+  default = {
+    shape = "VM.Standard2.8"
+    node_count = 1
+  }
+}
+
 variable "master" {
   type = "map"
   default = {
     shape = "VM.Standard2.8"
-    node_count = 2
+    node_count = 0
   }
 }
 
 variable "worker" {
   type = "map"
   default = {
-    shape = "BM.Standard1.36"
+    shape = "BM.Standard2.24"
     node_count = 3
     size_in_gbs = "1024"
   }

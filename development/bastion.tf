@@ -1,9 +1,10 @@
 resource "oci_core_instance" "bastion" {
+  count               = "${var.bastion["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-bastion"
   hostname_label      = "cdh-bastion"
-  shape               = "VM.Standard2.4"
+  shape               = "${var.bastion["shape"]}"
   subnet_id           = "${oci_core_subnet.bastion.*.id[var.availability_domain]}"
 
   source_details {

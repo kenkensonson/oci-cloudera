@@ -1,9 +1,10 @@
 resource "oci_core_instance" "utility" {
+  count               = "${var.utility["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility"
   hostname_label      = "cdh-utility"
-  shape               = "VM.Standard2.8"
+  shape               = "${var.utility["shape"]}"
   subnet_id           = "${oci_core_subnet.public.*.id[var.availability_domain]}"
 
   source_details {
