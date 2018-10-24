@@ -1,5 +1,5 @@
 # scripts
-All scripts in this location are referenced for deployment automation as part of Development, Production, and N-Node templates.
+These scripts are used by the modules in this repo to install and configure Cloudera EDH.
 
 * start.sh is the first script invoked by Terraform in remote-execution. It calls the bastion script in a Linux screen session as root.
 * bastion.sh is the primary script which drives discovery and deployment tasks. It is invoked by start.sh and runs on the bastion host.
