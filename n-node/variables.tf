@@ -63,11 +63,10 @@ variable "worker" {
 # You probably don't need to change these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-// See https://docs.us-phoenix-1.oraclecloud.com/images/
-// Oracle-provided image "CentOS-7.5-2018.06.22-0"
+// See https://docs.cloud.oracle.com/iaas/images/image/d5eed260-a42f-47c3-9c32-c8798783e40a/
+// Oracle-provided image "CentOS-7-2018.06.22-0"
 variable "images" {
   type = "map"
-
   default = {
     eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaasdvfvvgzjhqpuwmjbypgovachdgwvcvus5n4p64fajmbassg2pqa"
     us-ashburn-1   = "ocid1.image.oc1.iad.aaaaaaaa5o7kjzy7gqtmu5pxuhnh6yoi3kmzazlk65trhpjx5xg3hfbuqvgq"
