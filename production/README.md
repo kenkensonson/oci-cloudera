@@ -1,6 +1,8 @@
 # production
 This is the most powerful preconfigured option.  It provides high density, high performance and high availability.  It is an appropriate entry point for scaling up a production big data practice.
 
+Storage is on the local NVMe drives on the worker nodes.  Nodes are all placed in a single availability domain.
+
 |             | Worker Nodes   | Bastion Instance         | Utility and Master Instances |
 |-------------|----------------|--------------------------|------------------------------|
 | Minimum     | BM.DenseIO1.36 | VM.Standard1.4           | VM.Standard1.8               |                                

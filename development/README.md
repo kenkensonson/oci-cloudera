@@ -5,6 +5,8 @@ This is for small implementations.  This deployment consists of five instances:
 * 1 utility instance
 * 3 worker nodes
 
+Storage is on block volumes attached to the worker nodes.  Nodes are all placed in a single availability domain.
+
 This environment provides a much higher HDFS storage capacity, along with a compute and memory resources for use with a variety of big data workloads.   This environment is not a good fit for users who want high availability.
 
 |             | Worker Nodes                                       | Bastion Instance | Utility Instance |
