@@ -40,14 +40,6 @@ variable "utility" {
   }
 }
 
-variable "master" {
-  type = "map"
-  default = {
-    shape = "VM.Standard2.8"
-    node_count = 0
-  }
-}
-
 variable "worker" {
   type = "map"
   default = {
