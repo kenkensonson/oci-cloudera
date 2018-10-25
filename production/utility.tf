@@ -30,7 +30,7 @@ data "oci_core_vnic" "utility_vnic" {
   vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_vnics.vnic_attachments[0], "vnic_id")}"
 }
 
-resource "oci_core_volume" "utility0" {
+resource "oci_core_volume" "utility" {
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility-volume0"
