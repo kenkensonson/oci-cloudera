@@ -16,7 +16,7 @@ resource "oci_core_instance" "worker" {
     ssh_authorized_keys = "${var.ssh_public_key}"
     user_data = "${base64encode(format("%s\n%s\n",
       "#!/usr/bin/env bash",
-      file("../simple-scripts/worker.sh")
+      file("../scripts/worker.sh")
     ))}"
   }
 }

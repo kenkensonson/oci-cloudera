@@ -1,9 +1,8 @@
 # oci-cloudera-edh
-These are Terraform modules for deploying Cloudera Enterprise Data Hub (EDH) on Oracle Cloud Infrastructure (OCI):
+These are Terraform modules for deploying Cloudera Enterprise Data Hub (EDH) on Oracle Cloud Infrastructure (OCI).
 
 * [sandbox](sandbox) deploys a single instance running the Cloudera Docker container.
-* [single-ad](single-ad) is the most powerful preconfigured option.  It provides high density, high performance and high availability.  It is an appropriate entry point for scaling up a production big data practice.
-* [multi-ad](multi-ad) is a variation of the N-Node deployment that spans all ADs in a region.  This provides the most highly available solution for running Cloudera EDH on OCI.
+* [production](production) deploys a cluster set up according to best practices in place at our financial services industry customers.  This is a push button way to get a production grade cluster in a few minutes.
 
 ## Prerequisites
 First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/cloud-partners/oci-prerequisites).
