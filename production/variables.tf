@@ -58,14 +58,14 @@ variable "worker" {
 # You probably don't need to change these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-// https://docs.cloud.oracle.com/iaas/images/image/cf34ce27-e82d-4c1a-93e6-e55103f90164/
-// Oracle-Linux-7.5-2018.08.14-0
+// https://docs.cloud.oracle.com/iaas/images/image/5cc01498-0a1e-4c68-90c4-31e30120fd5c/
+// CentOS-7-2018.10.12-0
 variable "images" {
   type = "map"
   default = {
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaakzrywmh7kwt7ugj5xqi5r4a7xoxsrxtc7nlsdyhmhqyp7ntobjwq"
-    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaa2tq67tvbeavcmioghquci6p3pvqwbneq3vfy7fe7m7geiga4cnxa"
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra"
-    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaalsdgd47nl5tgb55sihdpqmqu2sbvvccjs6tmbkr4nx2pq5gkn63a"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaav3frw3wod63glppeb2hhh4ao7c6kntgt5jvxy4imiihclgkta7ja"
+    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaavujqgegoqyinkxzigumlwydq42vyf6nr3sfl7ram577zzlz2clpa"
+    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaazad4ygyhnrwphg7d6eohtop5ny3gri6ab3dkyof7fg75j4jiazta"
+    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaawhe4tofopwvhg7h6wo3rkt2pmbweykqe2vdb5ztmwewiocd7zo5a"
   }
 }
