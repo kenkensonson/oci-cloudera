@@ -21,3 +21,19 @@ resource "oci_core_instance" "worker" {
     create = "30m"
   }
 }
+
+resource "oci_core_volume" "worker" {
+  count               = "${var.worker["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[var.availability_domain], "name")}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "cdh-worker${count.index}"
+  size_in_gbs         = "${var.worker["size_in_gbs"]}"
+}
+
+resource "oci_core_volume_attachment" "worker" {
+  count           = "${var.worker["node_count"]}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.worker.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.worker.*.id[count.index]}"
+}

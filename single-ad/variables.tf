@@ -37,6 +37,7 @@ variable "utility" {
   default = {
     shape = "VM.Standard2.8"
     node_count = 1
+    size_in_gbs = "1024"
   }
 }
 
@@ -45,6 +46,7 @@ variable "master" {
   default = {
     shape = "VM.Standard2.8"
     node_count = 2
+    size_in_gbs = "1024"
   }
 }
 
