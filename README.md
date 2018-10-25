@@ -4,13 +4,15 @@ These are Terraform modules for deploying Cloudera Enterprise Data Hub (EDH) on 
 * [sandbox](sandbox) deploys a single instance running the Cloudera Docker container.
 * [production](production) deploys a cluster set up according to best practices in place at our financial services industry customers.  This is a push button way to get a production grade cluster in a few minutes.
 
+Cloudera has a great sizing guide [here](https://www.cloudera.com/documentation/enterprise/release-notes/topics/hardware_requirements_guide.html).
+
 | Application             | Worker                           | Bastion          | Utility          | Master           |
 |-------------------------|----------------------------------|------------------|------------------|------------------|
 | Small Development       | 3xVM.Standard2.16 with 1TB block | 1xVM.Standard2.4 | 1xVM.Standard2.8 |                  |                   
 | Recommended Development | 3xVM.Standard2.24 with 1TB block | 1xVM.Standard2.4 | 1xVM.Standard2.8 |                  |
 | Small Production        | 5xBM.DenseIO1.36                 | 1xVM.Standard2.4 | 1xVM.Standard2.8 | 2xVM.Standard2.8 |                                
 | Recommended Production  | 5xBM.DenseIO2.52                 | 1xVM.Standard2.4 | 1xVM.Standard2.8 | 2xVM.Standard2.8 |                 
-   
+
 ## Prerequisites
 First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/cloud-partners/oci-prerequisites).
 
