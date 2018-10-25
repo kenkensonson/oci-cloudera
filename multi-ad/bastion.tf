@@ -1,11 +1,11 @@
 resource "oci_core_instance" "bastion" {
   count               = "${var.bastion["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-bastion${count.index}"
   hostname_label      = "cdh-bastion${count.index}"
   shape               = "${var.bastion["shape"]}"
-  subnet_id           = "${oci_core_subnet.bastion.*.id[count.index%3]}"
+  subnet_id           = "${oci_core_subnet.bastion.*.id[count.index%var.availability_domains]}"
 
   source_details {
     source_type = "image"
@@ -23,7 +23,7 @@ resource "oci_core_instance" "bastion" {
 
 data "oci_core_vnic_attachments" "bastion_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   instance_id         = "${oci_core_instance.bastion.id}"
 }
 

@@ -1,11 +1,11 @@
 resource "oci_core_instance" "utility" {
   count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility${count.index}"
   hostname_label      = "cdh-utility${count.index}"
   shape               = "${var.utility["shape"]}"
-  subnet_id           = "${oci_core_subnet.public.*.id[count.index%3]}"
+  subnet_id           = "${oci_core_subnet.public.*.id[count.index%var.availability_domains]}"
 
   source_details {
     source_type = "image"
@@ -23,7 +23,7 @@ resource "oci_core_instance" "utility" {
 
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   instance_id         = "${oci_core_instance.utility.id}"
 }
 
@@ -33,7 +33,7 @@ data "oci_core_vnic" "utility_vnic" {
 
 resource "oci_core_volume" "utility0" {
   count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility${count.index}-volume0"
   size_in_gbs         = "${var.utility["size_in_gbs"]}"

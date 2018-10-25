@@ -1,11 +1,11 @@
 resource "oci_core_instance" "master" {
   count               = "${var.master["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-master${count.index}"
   hostname_label      = "cdh-master${count.index}"
   shape               = "${var.master["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[count.index%3]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[count.index%var.availability_domains]}"
 
   source_details {
     source_type = "image"
@@ -23,7 +23,7 @@ resource "oci_core_instance" "master" {
 
 resource "oci_core_volume" "master0" {
   count               = "${var.master["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%3],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-master${count.index}-volume0"
   size_in_gbs         = "${var.master["size_in_gbs"]}"
