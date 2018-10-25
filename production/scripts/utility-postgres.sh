@@ -1,10 +1,7 @@
-echo "Installing Postgres, Python, Paramiko..."
-yum install postgresql-server python-pip python-paramiko.noarch -y
-
 LOG_FILE="/var/log/cloudera-OCI-initialize.log"
 
 # manually set EXECNAME because this file is called from another script and it $0 is "bash"
-EXECNAME="initialize-postgresql.sh"
+EXECNAME="install-postgresql.sh"
 CURRENT_VERSION_MARKER='OCI_1'
 SLEEP_INTERVAL=5
 
@@ -20,18 +17,18 @@ stop_db()
 
 fail_or_continue()
 {
-  local RET=$1
-  local STR=$2
+    local RET=$1
+    local STR=$2
 
-  if [[ $RET -ne 0 ]]; then
-    stop_db
-    if [[ -z $STR ]]; then
-      STR="--> Error $RET"
+    if [[ $RET -ne 0 ]]; then
+        stop_db
+        if [[ -z $STR ]]; then
+            STR="--> Error $RET"
+        fi
+        log "$STR, giving up"
+        log "------- initialize-postgresql.sh failed -------"
+        exit "$RET"
     fi
-    log "$STR, giving up"
-    log "------- initialize-postgresql.sh failed -------"
-    exit "$RET"
-  fi
 }
 
 create_database()
@@ -455,7 +452,7 @@ NOW=$(date +%Y%m%d-%H%M%S)
 
 configure_postgresql_conf $DATA_DIR/postgresql.conf 0
 
-# Add header to pg_hba.conf.
+  # Add header to pg_hba.conf.
 echo "# Accept connections from all hosts" >> $DATA_DIR/pg_hba.conf
 
 
@@ -468,15 +465,15 @@ echo "# Accept connections from all hosts" >> $DATA_DIR/pg_hba.conf
 
 #put this line to the top of the ident to allow all local access
 sed -i '/host.*127.*ident/i \
-  host    all         all         127.0.0.1/32          md5  \ ' $DATA_DIR/pg_hba.conf
+host    all         all         127.0.0.1/32          md5  \ ' $DATA_DIR/pg_hba.conf
 #append this line as well, need both to allow access
 #echo "host    all         all         0.0.0.0/0          md5"
 
 #echo "listen_addresses = '*'" >> $DATA_DIR/postgresql.conf
 
 #configure the postgresql server to start at boot
-/sbin/chkconfig postgresql on
-service postgresql restart
+sudo /sbin/chkconfig postgresql on
+sudo service postgresql restart
 
 wait_for_db_server_to_start
 
@@ -497,7 +494,7 @@ create_hive_metastore
 configure_remote_connections
 
 # restart to make sure all configuration take effects
-service postgresql restart
+sudo service postgresql restart
 
 wait_for_db_server_to_start
 
