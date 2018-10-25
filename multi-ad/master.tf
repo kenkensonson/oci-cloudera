@@ -14,11 +14,10 @@ resource "oci_core_instance" "master" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data           = "${base64encode(file("../scripts/boot.sh"))}"
-  }
-
-  timeouts {
-    create = "30m"
+    user_data = "${base64encode(format("%s\n%s\n",
+      "#!/usr/bin/env bash",
+      file("../simple-scripts/master.sh")
+    ))}"
   }
 }
 
