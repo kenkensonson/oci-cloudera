@@ -14,12 +14,9 @@ resource "oci_core_instance" "worker" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data = "${base64encode(format("%s\n%s\n%s\n%s\n%s\n",
+    user_data = "${base64encode(format("%s\n%s\n",
       "#!/usr/bin/env bash",
-      file("../scripts/shared.sh"),
-      file("../scripts/worker-iscsi.sh"),
-      file("../scripts/worker-disk.sh"),
-      file("../scripts/worker-tune.sh")
+      file("../scripts/shared.sh")
     ))}"
   }
 }
