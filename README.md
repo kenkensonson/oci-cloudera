@@ -4,7 +4,6 @@ These are Terraform modules for deploying Cloudera Enterprise Data Hub (EDH) on 
 * [sandbox](sandbox) deploys a single instance running the Cloudera Docker container.
 * [development](development) is a minimal deployment with five instances.
 * [production](production) is the most powerful preconfigured option.  It provides high density, high performance and high availability.  It is an appropriate entry point for scaling up a production big data practice.
-* [n-node](n-node) deploys a cluster of arbitrary size.
 * [ad-spanning](ad-spanning) is a variation of the N-Node deployment that spans all ADs in a region.  This provides the most highly available solution for running Cloudera EDH on OCI.
 
 ## Prerequisites
