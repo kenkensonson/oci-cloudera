@@ -53,7 +53,7 @@ variable "master" {
 variable "worker" {
   type = "map"
   default = {
-    shape = "BM.DenseIO2.52"
+    shape = "VM.Standard2.24"
     node_count = 5
     size_in_gbs = "1024"
   }
