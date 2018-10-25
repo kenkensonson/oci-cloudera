@@ -30,14 +30,14 @@ variable "shape" {
 # You probably don't need to change these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-// See https://docs.cloud.oracle.com/iaas/images/image/d5eed260-a42f-47c3-9c32-c8798783e40a/
-// Oracle-provided image "CentOS-7-2018.06.22-0"
+// https://docs.cloud.oracle.com/iaas/images/image/5cc01498-0a1e-4c68-90c4-31e30120fd5c/
+// CentOS-7-2018.10.12-0
 variable "images" {
   type = "map"
   default = {
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaasdvfvvgzjhqpuwmjbypgovachdgwvcvus5n4p64fajmbassg2pqa"
-    us-ashburn-1   = "ocid1.image.oc1.iad.aaaaaaaa5o7kjzy7gqtmu5pxuhnh6yoi3kmzazlk65trhpjx5xg3hfbuqvgq"
-    uk-london-1    = "ocid1.image.oc1.uk-london-1.aaaaaaaaa74er3gyrjg3fiesftpc42viplbhp7gdafqzv33kyyx3jrazruta"
-    us-phoenix-1   = "ocid1.image.oc1.phx.aaaaaaaapnnv2phiyw7apcgtg6kmn572b2mux56ll6j6mck5xti3aw4bnwrq"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaav3frw3wod63glppeb2hhh4ao7c6kntgt5jvxy4imiihclgkta7ja"
+    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaavujqgegoqyinkxzigumlwydq42vyf6nr3sfl7ram577zzlz2clpa"
+    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaazad4ygyhnrwphg7d6eohtop5ny3gri6ab3dkyof7fg75j4jiazta"
+    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaawhe4tofopwvhg7h6wo3rkt2pmbweykqe2vdb5ztmwewiocd7zo5a"
   }
 }
