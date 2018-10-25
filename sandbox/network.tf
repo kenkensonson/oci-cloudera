@@ -87,14 +87,13 @@ resource "oci_core_security_list" "public" {
 }
 
 resource "oci_core_subnet" "public" {
-  count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index], "name")}"
-  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index)}"
-  display_name        = "public${count.index}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
+  cidr_block          = "${var.cidr_block}"
+  display_name        = "public"
+  dns_label           = "public"
   compartment_id      = "${var.compartment_ocid}"
   vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
   route_table_id      = "${oci_core_route_table.route_table.id}"
   security_list_ids   = ["${oci_core_security_list.public.id}"]
   dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
-  dns_label           = "public${count.index}"
 }

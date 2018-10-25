@@ -15,19 +15,14 @@ variable "region" {}
 
 # Key used to SSH to OCI VMs
 variable "ssh_public_key" {}
-variable "ssh_private_key" {}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Optional variables
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "availability_domain" {
-  default = "2"
-}
-
-variable "blocksize_in_gbs" {
-  default = "1024"
+variable "shape" {
+  default = "VM.Standard2.8"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
