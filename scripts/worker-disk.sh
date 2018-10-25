@@ -1,5 +1,3 @@
-#!/bin/bash
-##
 ## Set the following variable to "1" to enable data tiering.
 enable_data_tiering="0"
 worker_check=`hostname | grep worker`

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 LOG_FILE="/var/log/cloudera-OCI-initialize.log"
 
 # manually set EXECNAME because this file is called from another script and it $0 is "bash"

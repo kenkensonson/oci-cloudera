@@ -34,12 +34,11 @@ JOBROLE="root"
 JOBFUNCTION="root"
 COMPANY="Oracle"
 
-## MAIN
 echo "Installing Postgres, Python, Paramiko..."
 yum install postgresql-server python-pip python-paramiko.noarch -y
 
 echo "Configuring Postgres Database..."
-bash /home/opc/install-postgresql.sh >> /var/log/postgresql_cdh_setup.log
+bash /home/opc/initialize-postgresql.sh >> /var/log/postgresql_cdh_setup.log
 
 echo "Installing CM API via PIP plus dependencies..."
 pip install --upgrade pip
