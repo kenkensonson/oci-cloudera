@@ -97,32 +97,6 @@ resource "oci_core_security_list" "private" {
   }]
 }
 
-resource "oci_core_security_list" "bastion" {
-  compartment_id = "${var.compartment_ocid}"
-  display_name   = "bastion"
-  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
-
-  egress_security_rules = [{
-    protocol    = "6"
-    destination = "0.0.0.0/0"
-  }]
-
-  ingress_security_rules = [{
-    tcp_options {
-      "max" = 22
-      "min" = 22
-    }
-
-    protocol = "6"
-    source   = "0.0.0.0/0"
-  },
-    {
-      protocol = "6"
-      source   = "${var.cidr_block}"
-    },
-  ]
-}
-
 resource "oci_core_subnet" "public" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
@@ -146,18 +120,5 @@ resource "oci_core_subnet" "private" {
   vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
   route_table_id      = "${oci_core_route_table.route_table.id}"
   security_list_ids   = ["${oci_core_security_list.private.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
-}
-
-resource "oci_core_subnet" "bastion" {
-  count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
-  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index+6)}"
-  display_name        = "bastion${count.index}"
-  dns_label           = "bastion${count.index}"
-  compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
-  route_table_id      = "${oci_core_route_table.route_table.id}"
-  security_list_ids   = ["${oci_core_security_list.bastion.id}"]
   dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
 }
