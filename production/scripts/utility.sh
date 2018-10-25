@@ -9,7 +9,6 @@ yum install -y oracle-j2sdk1.8
 
 # Step 3: Install Cloudera Manager Server
 yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-server
-JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
 
 # Step 4: Install Databases
 yum install -y postgresql-server
@@ -17,4 +16,12 @@ yum install -y python-pip
 pip install --upgrade pip
 pip install psycopg2==2.7.5 --ignore-installed
 
-echo "Now I'm going to configure Postgres..."
+echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
+sudo su -l postgres -c "postgresql-setup initdb"
+
+# Step 5: Set up the Cloudera Manager Database
+
+# Step 6: Install CDH and Other Software
+#systemctl start cloudera-scm-server
+
+# Step 7: Set Up a Cluster

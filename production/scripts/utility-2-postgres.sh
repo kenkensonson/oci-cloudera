@@ -1,3 +1,7 @@
+# Step 5: Set up the Cloudera Manager Database
+# This was clearly copied from somewhere.  It doesn't seem to quite align with what's recommended here:
+# https://www.cloudera.com/documentation/enterprise/6/6.0/topics/prepare_cm_database.html#cmig_topic_5_2
+
 LOG_FILE="/var/log/cloudera-OCI-initialize.log"
 
 # manually set EXECNAME because this file is called from another script and it $0 is "bash"
