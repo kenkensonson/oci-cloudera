@@ -1,11 +1,30 @@
+# Install instructions are here: https://www.cloudera.com/documentation/enterprise/6/6.0/topics/install_cm_cdh.html
+
+# Step 1: Configure a Repository
+# Step 2: Install JDK
+# Step 3: Install Cloudera Manager Server
+# Step 4: Install Databases
+# Step 5: Set up the Cloudera Manager Database
+# Step 6: Install CDH and Other Software
+# Step 7: Set Up a Cluster
+
+
+
+
+
+
+
+
+
+
+
+
 # Install Cloudera Management Service
-## Set cdh_version to "5" to use latest version, otherwise custom version can be specified
-#cdh_version="5.12.2"
 cdh_version="5"
 rpm --import http://archive.cloudera.com/cm5/redhat/7/x86_64/cm/RPM-GPG-KEY-cloudera
+             https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/5.15.1/
+
 wget http://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-if [ $cdh_version = "5" ]; then
-  sleep .001
 else
   sed -i "s/cm\/5/cm\/${cdh_version}/g" /etc/yum.repos.d/cloudera-manager.repo
 fi

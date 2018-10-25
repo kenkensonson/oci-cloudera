@@ -21,15 +21,10 @@ variable "ssh_public_key" {}
 # You can modify these.
 # ---------------------------------------------------------------------------------------------------------------------
 
+variable "cloudera_manager_version" = { default = 6.0.1 }
+
 # Set to 1 to put everything in on AD or 3 to spread nodes out
 variable "availability_domains" { default = 3 }
-
-variable "bastion" {
-  type = "map"
-  default = {
-    shape = "VM.Standard2.4"
-  }
-}
 
 variable "utility" {
   type = "map"
