@@ -4,7 +4,7 @@ resource "oci_core_instance" "sandbox" {
   display_name        = "cdh-sandbox"
   hostname_label      = "cdh-sandbox"
   shape               = "${var.shape}"
-  subnet_id           = "${oci_core_subnet.public.*.id[var.availability_domain]}"
+  subnet_id           = "${oci_core_subnet.public.*.id[0]}"
 
   source_details {
     source_type = "image"
