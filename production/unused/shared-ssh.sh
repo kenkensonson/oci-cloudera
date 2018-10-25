@@ -36,3 +36,7 @@ discovery () {
     i=$((i+1))
   done;
 }
+
+cd /
+host_discovery >> host_list
+cat host_list | grep worker >> workers
