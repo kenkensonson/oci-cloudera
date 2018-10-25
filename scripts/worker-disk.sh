@@ -23,18 +23,18 @@ done
 ## Primary Disk Mounting Function
 data_mount () {
   echo -e "Mounting /dev/$disk to /data$dcount"
-  sudo mkdir -p /data$dcount
-  sudo mount -o noatime,barrier=1 -t ext4 /dev/$disk /data$dcount
-  UUID=`sudo lsblk -no UUID /dev/$disk`
-  echo "UUID=$UUID   /data$dcount    ext4   defaults,noatime,discard,barrier=0 0 1" | sudo tee -a /etc/fstab
+  mkdir -p /data$dcount
+  mount -o noatime,barrier=1 -t ext4 /dev/$disk /data$dcount
+  UUID=`lsblk -no UUID /dev/$disk`
+  echo "UUID=$UUID   /data$dcount    ext4   defaults,noatime,discard,barrier=0 0 1" | tee -a /etc/fstab
 }
 
 block_data_mount () {
   echo -e "Mounting /dev/$disk to /data$dcount"
-  sudo mkdir -p /data$dcount
-  sudo mount -o noatime,barrier=1 -t ext4 /dev/$disk /data$dcount
-  UUID=`sudo lsblk -no UUID /dev/$disk`
-  echo "UUID=$UUID   /data$dcount    ext4   defaults,_netdev,nofail,noatime,discard,barrier=0 0 2" | sudo tee -a /etc/fstab
+  mkdir -p /data$dcount
+  mount -o noatime,barrier=1 -t ext4 /dev/$disk /data$dcount
+  UUID=`lsblk -no UUID /dev/$disk`
+  echo "UUID=$UUID   /data$dcount    ext4   defaults,_netdev,nofail,noatime,discard,barrier=0 0 2" | tee -a /etc/fstab
 }
 
 data_tiering () {
@@ -68,7 +68,7 @@ bvcount="0"
 dcount=0
 for disk in `cat /proc/partitions | grep -ivw 'sda' | grep -ivw 'sda[1-3]' | sed 1,2d | gawk '{print $4}'`; do
   echo -e "\nProcessing /dev/$disk"
-  sudo mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 /dev/$disk
+  mke2fs -F -t ext4 -b 4096 -E lazy_itable_init=1 -O sparse_super,dir_index,extent,has_journal,uninit_bg -m1 /dev/$disk
   nv_chk=`echo $disk | grep nv`;
   nv_chk=$?
   if [ $nv_chk = "0" ]; then
@@ -78,7 +78,7 @@ for disk in `cat /proc/partitions | grep -ivw 'sda' | grep -ivw 'sda[1-3]' | sed
     bvcount=$((bvcount+1))
     block_data_mount
   fi
-  sudo /sbin/tune2fs -i0 -c0 /dev/$disk
+  /sbin/tune2fs -i0 -c0 /dev/$disk
   if [ "$is_worker" = "true" ]; then
     if [ "$enable_data_tiering" = "1" ]; then
       data_tiering

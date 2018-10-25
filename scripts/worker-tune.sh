@@ -1,5 +1,5 @@
 ## Install Java
-sudo yum install -y java-1.8.0-openjdk.x86_64
+yum install -y java-1.8.0-openjdk.x86_64
 
 ## Disable Transparent Huge Pages
 echo never | tee -a /sys/kernel/mm/transparent_hugepage/enabled
@@ -25,8 +25,8 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
 ## Enable root login via SSH key
-sudo cp /root/.ssh/authorized_keys /root/.ssh/authorized_keys.bak
-sudo cp /home/opc/.ssh/authorized_keys /root/.ssh/authorized_keys
+cp /root/.ssh/authorized_keys /root/.ssh/authorized_keys.bak
+cp /home/opc/.ssh/authorized_keys /root/.ssh/authorized_keys
 
 ## Set Limits
 echo "hdfs  -       nofile  32768

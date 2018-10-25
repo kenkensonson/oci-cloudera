@@ -69,7 +69,7 @@ done;
 echo -n "Waiting for SCM server to be available [*"
 scm_chk="1"
 while [ "$scm_chk" != "0" ]; do
-	scm_lsn=`sudo netstat -tlpn | grep 7180`
+	scm_lsn=`netstat -tlpn | grep 7180`
 	scm_chk=`echo -e $?`
 	if [ "$scm_chk" = "0" ]; then
 		echo -n "*] [OK]"

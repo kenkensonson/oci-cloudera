@@ -472,8 +472,8 @@ sed -i '/host.*127.*ident/i \
 #echo "listen_addresses = '*'" >> $DATA_DIR/postgresql.conf
 
 #configure the postgresql server to start at boot
-sudo /sbin/chkconfig postgresql on
-sudo service postgresql restart
+/sbin/chkconfig postgresql on
+service postgresql restart
 
 wait_for_db_server_to_start
 
@@ -494,7 +494,7 @@ create_hive_metastore
 configure_remote_connections
 
 # restart to make sure all configuration take effects
-sudo service postgresql restart
+service postgresql restart
 
 wait_for_db_server_to_start
 
