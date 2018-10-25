@@ -1,16 +1,9 @@
 #!/bin/bash
 
-if [ -f /etc/selinux/config ]; then
-  selinuxchk=`sudo cat /etc/selinux/config | grep enforcing`
-  selinux_chk=`echo -e $?`
-  if [ $selinux_chk = "0" ]; then
-    sudo sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-    sudo setenforce 0
-  fi
-fi
+sudo sed -i.bak 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+sudo setenforce 0
 
 cd /home/opc/
-setenforce 0
 
 ## Install Java
 yum -y install java-1.8.0-openjdk.x86_64
@@ -38,22 +31,9 @@ echo net.ipv4.tcp_low_latency=1 >> /etc/sysctl.conf
 ## Tune File System options
 sed -i "s/defaults        1 1/defaults,noatime        0 0/" /etc/fstab
 
-## Firewall Setup
-firewall_on="1"
-if [ $firewall_on = "1" ]; then
-  echo -e "\tSetting up Firewall Ports"
-  echo -e "Port 7180"
-  firewall-cmd --zone=public --add-port=7180/tcp
-  echo -e "Port 8888"
-  firewall-cmd --zone=public --add-port=8888/tcp
-  echo -e "Port 80"
-  firewall-cmd --zone=public --add-port=80/tcp
-  firewall-cmd --runtime-to-permanent
-  echo -e "DONE"
-else
-  systemctl stop firewalld
-  systemctl disable firewalld
-fi
+## Turn off firewall
+systemctl stop firewalld
+systemctl disable firewalld
 
 echo -e "Installing Docker..."
 yum -y install docker.x86_64

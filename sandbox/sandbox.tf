@@ -15,10 +15,6 @@ resource "oci_core_instance" "sandbox" {
     ssh_authorized_keys = "${var.ssh_public_key}"
     user_data           = "${base64encode(file("sandbox.sh"))}"
   }
-
-  timeouts {
-    create = "30m"
-  }
 }
 
 data "oci_core_vnic_attachments" "sandbox_vnics" {
