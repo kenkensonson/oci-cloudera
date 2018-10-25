@@ -1,44 +1,36 @@
 # Install instructions are here: https://www.cloudera.com/documentation/enterprise/6/6.0/topics/install_cm_cdh.html
 
 # Step 1: Configure a Repository
+wget https://archive.cloudera.com/cm6/6.0.1/redhat7/yum/cloudera-manager.repo -P /etc/yum.repos.d/
+rpm --import https://archive.cloudera.com/cm6/6.0.1/redhat7/yum/RPM-GPG-KEY-cloudera
+
 # Step 2: Install JDK
+yum install -y oracle-j2sdk1.8
+
 # Step 3: Install Cloudera Manager Server
+yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-server
+
 # Step 4: Install Databases
+yum install -y postgresql-server
+
+yum install python-pip
+pip install psycopg2==2.7.5 --ignore-installed
+
+echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
+sudo su -l postgres -c "postgresql-setup initdb"
+
+host all all 127.0.0.1/32 md5
+
+systemctl enable postgresql
+systemctl restart postgresql
+
+#sudo -u postgres psql
+#CREATE ROLE <user> LOGIN PASSWORD '<password>';
+#CREATE DATABASE <database> OWNER <user> ENCODING 'UTF8';
+
 # Step 5: Set up the Cloudera Manager Database
 # Step 6: Install CDH and Other Software
 # Step 7: Set Up a Cluster
-
-
-
-
-
-
-
-
-
-
-
-
-# Install Cloudera Management Service
-cdh_version="5"
-rpm --import http://archive.cloudera.com/cm5/redhat/7/x86_64/cm/RPM-GPG-KEY-cloudera
-             https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/5.15.1/
-
-wget http://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-else
-  sed -i "s/cm\/5/cm\/${cdh_version}/g" /etc/yum.repos.d/cloudera-manager.repo
-fi
-yum install -y oracle-j2sdk* cloudera-manager-daemons cloudera-manager-server
-
-#echo -e "Copying (if exists) HDFS Data Tiering file from first Worker."
-#scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa root@cdh-worker-1:/home/opc/hdfs_data_tiering.txt .
-#if [ -f "hdfs_data_tiering.txt" ]; then
-#  echo -e "HDFS Data Tiering file found!  Copying to Utility node."
-#  scp -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa hdfs_data_tiering.txt root@cdh-utility-1:/home/opc/hdfs_data_tiering.txt
-#fi
-#echo -e "Starting CDH provisioning via SCM..."
-## Invoke SCM bootstrapping and initialization
-#ssh -o BatchMode=yes -o StrictHostKeyChecking=no -i /home/opc/.ssh/id_rsa opc@${utilfqdn} "sudo /home/opc/startup.sh"
 
 VMSIZE=$(curl -L http://169.254.169.254/opc/v1/instance/metadata/shape)
 
