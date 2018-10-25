@@ -27,7 +27,7 @@ variable "availability_domains" { default = 3 }
 variable "bastion" {
   type = "map"
   default = {
-    shape = "VM.Standard2.8"
+    shape = "VM.Standard2.4"
   }
 }
 
