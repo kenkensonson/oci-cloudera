@@ -16,9 +16,24 @@ yum install -y python-pip
 pip install --upgrade pip
 pip install psycopg2==2.7.5 --ignore-installed
 
+# Step 4.1: Make sure that LC_ALL is set to en_US.UTF-8 and initialize the database
 echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
-sudo su -l postgres -c "postgresql-setup initdb"
+su -l postgres -c "postgresql-setup initdb"
 
+# Step 4.2: Enable MD5 authentication.
+sed -i '/host.*127.*ident/i \
+host    all         all         127.0.0.1/32          md5  \ ' /var/lib/pgsql/data/pg_hba.conf
+
+# Step 4.3: Configure settings to ensure your system performs as expected.
+/var/lib/pgsql/data/postgresql.conf
+
+/opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm scm
+
+# Step 4.4: Configure the PostgreSQL server to start at boot.
+systemctl enable postgresql
+systemctl restart postgresql
+
+# Creating Databases for Cloudera Software
 # Step 5: Set up the Cloudera Manager Database
 
 # Step 6: Install CDH and Other Software
