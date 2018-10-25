@@ -19,9 +19,6 @@ yum install -y python-pip
 pip install --upgrade pip
 pip install psycopg2==2.7.5 --ignore-installed
 
-echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
-su -l postgres -c "postgresql-setup initdb"
-
 # To do - md5
 #host all all 127.0.0.1/32 md5
 
