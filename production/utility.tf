@@ -1,6 +1,5 @@
 resource "oci_core_instance" "utility" {
-  count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "cdh-utility${count.index}"
   hostname_label      = "cdh-utility${count.index}"
@@ -34,19 +33,17 @@ data "oci_core_vnic" "utility_vnic" {
 }
 
 resource "oci_core_volume" "utility0" {
-  count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "cdh-utility${count.index}-volume0"
+  display_name        = "cdh-utility-volume0"
   size_in_gbs         = "${var.utility["size_in_gbs"]}"
 }
 
 resource "oci_core_volume_attachment" "utility0" {
-  count           = "${var.utility["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.utility0.*.id[count.index]}"
+  instance_id     = "${oci_core_instance.utility.id}"
+  volume_id       = "${oci_core_volume.utility.id}"
 }
 
 output "Cloudera Manager Login Available after ~15m" { value = "http://${data.oci_core_vnic.utility_vnic.public_ip_address}:7180/cmf/" }
