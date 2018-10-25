@@ -46,3 +46,5 @@ resource "oci_core_volume_attachment" "utility0" {
   instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
   volume_id       = "${oci_core_volume.utility0.*.id[count.index]}"
 }
+
+output "Cloudera Manager Login Available after ~15m" { value = "http://${data.oci_core_vnic.utility_vnic.public_ip_address}:7180/cmf/" }

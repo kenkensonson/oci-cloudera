@@ -30,3 +30,5 @@ data "oci_core_vnic_attachments" "bastion_vnics" {
 data "oci_core_vnic" "bastion_vnic" {
   vnic_id = "${lookup(data.oci_core_vnic_attachments.bastion_vnics.vnic_attachments[0], "vnic_id")}"
 }
+
+output "Bastion IP" { value = "${data.oci_core_vnic.bastion_vnic.public_ip_address}" }
