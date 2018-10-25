@@ -38,5 +38,11 @@ discovery () {
 }
 
 cd /
-host_discovery >> host_list
+discovery > host_list
 cat host_list | grep worker >> workers
+
+## Setup known_hosts entries for every machine in the cluster
+for host in `cat host_list`; do
+	key=`ssh-keyscan -t rsa -H $host 2>&1 | sed 1d | gawk '{print $3}'`;
+	echo -e $host,$ip ecdsa-sha2-nistp256 $key >> /home/opc/.ssh/known_hosts;
+done;
