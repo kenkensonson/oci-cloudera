@@ -9,12 +9,12 @@ yum install -y oracle-j2sdk1.8
 
 # Step 3: Install Cloudera Manager Server
 yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-server
-
-# To do - TLS configuration
-#JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
+JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
 
 # Step 4: Install Databases
 yum install -y postgresql-server
 yum install -y python-pip
 pip install --upgrade pip
 pip install psycopg2==2.7.5 --ignore-installed
+
+echo "Now I'm going to configure Postgres..."
