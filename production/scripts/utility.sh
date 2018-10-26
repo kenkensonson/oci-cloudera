@@ -48,3 +48,20 @@ systemctl start cloudera-scm-server
 
 # Step 7: Set Up a Cluster
 #python utility-cmx.py
+
+## Execute Python cluster setup
+VMSIZE=$(curl http://169.254.169.254/opc/v1/instance/shape)
+ClusterName="TestCluster"
+cmUser="cdhadmin"
+cmPassword="somepassword"
+EMAILADDRESS="someguy@oracle.com"
+BUSINESSPHONE="8675309"
+FIRSTNAME="Big"
+LASTNAME="Data"
+JOBROLE="root"
+JOBFUNCTION="root"
+COMPANY="Oracle"
+
+mkdir -p /log/cloudera
+echo -e "Setup ready to execute... Running Cluster Initialization Script... (output will begin shortly)"
+python /home/opc/cmx.py -a -n "$ClusterName" -u "$User" -m "$mip" -w "$cluster_host_ip" -c "$cmUser" -s "$cmPassword" -e -r "$EMAILADDRESS" -b "$BUSINESSPHONE" -f "$FIRSTNAME" -t "$LASTNAME" -o "$JOBROLE" -i "$JOBFUNCTION" -y "$COMPANY" -v "$VMSIZE" -k "$ssh_keypath"
