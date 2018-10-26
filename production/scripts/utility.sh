@@ -40,10 +40,10 @@ sudo -u postgres psql
 CREATE ROLE <user> LOGIN PASSWORD '<password>';
 CREATE DATABASE <database> OWNER <user> ENCODING 'UTF8';
 ALTER DATABASE <database> SET standard_conforming_strings=off;
-
-su -l postgres -c /opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm scm
+/opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm scm
 
 # Step 6: Install CDH and Other Software
 systemctl start cloudera-scm-server
 
 # Step 7: Set Up a Cluster
+python utility-cmx.py
