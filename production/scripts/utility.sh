@@ -9,6 +9,7 @@ yum install -y oracle-j2sdk1.8
 
 # Step 3: Install Cloudera Manager Server
 yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-server
+JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
 
 # Step 4: Install Databases
 yum install -y postgresql-server
@@ -62,6 +63,6 @@ JOBROLE="root"
 JOBFUNCTION="root"
 COMPANY="Oracle"
 
-mkdir -p /log/cloudera
-echo -e "Setup ready to execute... Running Cluster Initialization Script... (output will begin shortly)"
-python /home/opc/cmx.py -a -n "$ClusterName" -u "$User" -m "$mip" -w "$cluster_host_ip" -c "$cmUser" -s "$cmPassword" -e -r "$EMAILADDRESS" -b "$BUSINESSPHONE" -f "$FIRSTNAME" -t "$LASTNAME" -o "$JOBROLE" -i "$JOBFUNCTION" -y "$COMPANY" -v "$VMSIZE" -k "$ssh_keypath"
+#mkdir -p /log/cloudera
+#echo -e "Setup ready to execute... Running Cluster Initialization Script... (output will begin shortly)"
+#python /home/opc/cmx.py -a -n "$ClusterName" -u "$User" -m "$mip" -w "$cluster_host_ip" -c "$cmUser" -s "$cmPassword" -e -r "$EMAILADDRESS" -b "$BUSINESSPHONE" -f "$FIRSTNAME" -t "$LASTNAME" -o "$JOBROLE" -i "$JOBFUNCTION" -y "$COMPANY" -v "$VMSIZE" -k "$ssh_keypath"
