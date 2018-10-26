@@ -42,6 +42,16 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules = [{
     tcp_options {
+      "max" = 22
+      "min" = 22
+    }
+
+    protocol = "6"
+    source   = "0.0.0.0/0"
+  }]
+
+  ingress_security_rules = [{
+    tcp_options {
       "max" = 7180
       "min" = 7180
     }
@@ -52,8 +62,8 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules = [{
     tcp_options {
-      "max" = 19888
-      "min" = 19888
+      "max" = 7183
+      "min" = 7183
     }
 
     protocol = "6"
@@ -62,8 +72,8 @@ resource "oci_core_security_list" "public" {
 
   ingress_security_rules = [{
     tcp_options {
-      "max" = 22
-      "min" = 22
+      "max" = 19888
+      "min" = 19888
     }
 
     protocol = "6"
