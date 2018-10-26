@@ -28,7 +28,7 @@ CONF_FILE=/var/lib/pgsql/data/pg_hba.conf
 sed -i '/host.*127.*ident/i \host    all         all         127.0.0.1/32          md5  \ ' ${CONF_FILE}
 
 # Need to fix this
-sed -e '/^listen_addresses\s*=/d' -i ${CONF_FILE}
+#sed -e '/^listen_addresses\s*=/d' -i ${CONF_FILE}
 
 # Step 4.3: Configure settings to ensure your system performs as expected.
 #/var/lib/pgsql/data/postgresql.conf
@@ -44,8 +44,18 @@ service postgresql start
 chkconfig postgresql on
 
 # Step 5: Set up the Cloudera Manager Database
-sudo -u postgres psql -c "CREATE ROLE scm LOGIN PASSWORD password;"
-sudo -u postgres psql -c "CREATE DATABASE scm OWNER scm ENCODING 'UTF8';"
+create_database()
+{
+  local DBNAME=$1
+  local PASSWORD=$2
+  local ROLE=$DBNAME
+
+  sudo -u postgres psql -c "CREATE ROLE scm LOGIN PASSWORD '${PASSWORD}';"
+  sudo -u postgres psql -c "CREATE DATABASE ${DBNAME} OWNER ${ROLE} ENCODING 'UTF8';"
+  sudo -u postgres psql -c "ALTER DATABASE ${DBNAME} SET standard_conforming_strings=off;"
+}
+
+
 /opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm password
 
 
