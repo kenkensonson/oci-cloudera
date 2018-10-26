@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-__version__ = '0.11.2803'
-
 import socket
 import re
 import urllib
@@ -14,9 +10,7 @@ import sys
 import random
 import paramiko
 from paramiko import SSHClient
-
 from time import sleep
-
 from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
 from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
