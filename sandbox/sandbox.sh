@@ -19,8 +19,8 @@ container=`docker ps | sed 1d | gawk '{print $1}'`
 docker exec -it ${container} /home/cloudera/cloudera-manager --express
 
 echo -e "Adding Cloudera user..."
-useradd -s /bin/bash cloudera
-mkdir -p /home/cloudera/.ssh
+useradd  cloudera
+mkdir /home/cloudera/.ssh
 cp /home/opc/.ssh/authorized_keys /home/cloudera/.ssh/
 chown cloudera:cloudera -R /home/cloudera
-echo "cloudera    ALL=(ALL)       ALL" >> /etc/sudoers
+usermod -aG wheel cloudera
