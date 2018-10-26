@@ -15,9 +15,6 @@ from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
 from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 
-LOG_DIR = '/log/cloudera'
-
-
 def getParameterValue(vmsize, parameter):
     log("vmsize: " + vmsize + ", parameter:" + parameter)
     switcher = {

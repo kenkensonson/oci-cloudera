@@ -62,7 +62,6 @@ JOBROLE="root"
 JOBFUNCTION="root"
 COMPANY="Oracle"
 
-mkdir -p /log/cloudera
 python /home/opc/cmx.py \
   -a \
   -n "$ClusterName" \
