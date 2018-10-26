@@ -21,20 +21,27 @@ echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
 su -l postgres -c "postgresql-setup initdb"
 
 # Step 4.2: Enable MD5 authentication.
-sed -i '/host.*127.*ident/i \
-host    all         all         127.0.0.1/32          md5  \ ' /var/lib/pgsql/data/pg_hba.conf
+CONF_FILE=/var/lib/pgsql/data/pg_hba.conf
+sed -i '/host.*127.*ident/i \host    all         all         127.0.0.1/32          md5  \ ' ${CONF_FILE}
+sed -e '/^listen_addresses\s*=/d' -i ${CONF_FILE}
 
 # Step 4.3: Configure settings to ensure your system performs as expected.
-/var/lib/pgsql/data/postgresql.conf
-
-/opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm scm
+#/var/lib/pgsql/data/postgresql.conf
+sed -e '/^max_connections\s*=/d' -i "$CONF_FILE"
+sed -e '/^shared_buffers\s*=/d' -i "$CONF_FILE"
+sed -e '/^standard_conforming_strings\s*=/d' -i "$CONF_FILE"
 
 # Step 4.4: Configure the PostgreSQL server to start at boot.
 systemctl enable postgresql
 systemctl restart postgresql
 
-# Creating Databases for Cloudera Software
 # Step 5: Set up the Cloudera Manager Database
+sudo -u postgres psql
+CREATE ROLE <user> LOGIN PASSWORD '<password>';
+CREATE DATABASE <database> OWNER <user> ENCODING 'UTF8';
+ALTER DATABASE <database> SET standard_conforming_strings=off;
+
+su -l postgres -c /opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm scm
 
 # Step 6: Install CDH and Other Software
 #systemctl start cloudera-scm-server
