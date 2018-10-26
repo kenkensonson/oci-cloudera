@@ -8,15 +8,7 @@ echo -e "Installing Docker..."
 yum -y install docker
 systemctl start docker
 
-echo -e "Downloading Cloudera Docker Container..."
-cd /
-filename=cloudera-quickstart-vm-5.13.0-0-beta-docker
-wget https://downloads.cloudera.com/demo_vm/docker/${filename}.tar.gz
-tar -zxvf ${filename}.tar.gz
-cd ${filename}
-docker import ${filename}.tar
-
-echo -e "Starting Cloudera Docker Container..."
+echo -e "Downloading, Extracting and Starting Cloudera Docker Container..."
 docker run -d --hostname=quickstart.cloudera --privileged=true -t -i -p 8888:8888 -p 7180:7180 -p 80:80 cloudera/quickstart:latest /usr/bin/docker-quickstart
 
 echo -e "Waiting 120 seconds for the container to start..."
