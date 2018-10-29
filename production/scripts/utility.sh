@@ -77,21 +77,24 @@ JOBROLE="root"
 JOBFUNCTION="root"
 COMPANY="Oracle"
 
-python /home/opc/cmx.py \
-  -a \
-  -n "$ClusterName" \
-  -u "$User" \
-  -m "$mip" -w \
-  "$cluster_host_ip" \
-  -c "$cmUser" \
-  -s "$cmPassword" \
-  -e \
-  -r "$EMAILADDRESS" \
-  -b "$BUSINESSPHONE" \
-  -f "$FIRSTNAME" \
-  -t "$LASTNAME" \
-  -o "$JOBROLE" \
-  -i "$JOBFUNCTION" \
-  -y "$COMPANY" \
-  -v "$VMSIZE" \
-  -k "$ssh_keypath"
+# cdh-master[0-99].private[0-2].cloudera.oraclevcn.com
+# cdh-worker[0-99].private[0-2].cloudera.oraclevcn.com
+
+# python /home/opc/cmx.py \
+#   -a \
+#   -n "$ClusterName" \
+#   -u "$User" \
+#   -m "$mip" -w \
+#   "$cluster_host_ip" \
+#   -c "$cmUser" \
+#   -s "$cmPassword" \
+#   -e \
+#   -r "$EMAILADDRESS" \
+#   -b "$BUSINESSPHONE" \
+#   -f "$FIRSTNAME" \
+#   -t "$LASTNAME" \
+#   -o "$JOBROLE" \
+#   -i "$JOBFUNCTION" \
+#   -y "$COMPANY" \
+#   -v "$VMSIZE" \
+#   -k "$ssh_keypath"
