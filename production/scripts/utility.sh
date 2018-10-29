@@ -48,53 +48,22 @@ done
 systemctl start cloudera-scm-server
 
 # Step 7: Set Up a Cluster
-
-echo -n "Waiting for cloudera-scm-server to be available [*"
-scm_chk="1"
-while [ "$scm_chk" != "0" ]; do
-  scm_lsn=`sudo netstat -tlpn | grep 7180`
-  scm_chk=`echo -e $?`
-  if [ "$scm_chk" = "0" ]; then
-    echo -n "*] [OK]"
-    echo -e "\n"
-  else
-    echo -n "*"
-    sleep 1
-  fi
-done;
-
-
-## Execute Python cluster setup
 VMSIZE=$(curl http://169.254.169.254/opc/v1/instance/shape)
 ClusterName="TestCluster"
 cmUser="cdhadmin"
 cmPassword="somepassword"
-EMAILADDRESS="someguy@oracle.com"
-BUSINESSPHONE="8675309"
-FIRSTNAME="Big"
-LASTNAME="Data"
-JOBROLE="root"
-JOBFUNCTION="root"
-COMPANY="Oracle"
 
 # cdh-master[0-99].private[0-2].cloudera.oraclevcn.com
 # cdh-worker[0-99].private[0-2].cloudera.oraclevcn.com
 
-# python /home/opc/cmx.py \
-#   -a \
-#   -n "$ClusterName" \
-#   -u "$User" \
-#   -m "$mip" -w \
-#   "$cluster_host_ip" \
-#   -c "$cmUser" \
-#   -s "$cmPassword" \
-#   -e \
-#   -r "$EMAILADDRESS" \
-#   -b "$BUSINESSPHONE" \
-#   -f "$FIRSTNAME" \
-#   -t "$LASTNAME" \
-#   -o "$JOBROLE" \
-#   -i "$JOBFUNCTION" \
-#   -y "$COMPANY" \
-#   -v "$VMSIZE" \
-#   -k "$ssh_keypath"
+ python utility.py \
+   --highavailable \
+   -n "$ClusterName" \
+   -u "$User" \
+   -m "$mip" -w \
+   "$cluster_host_ip" \
+   -c "$cmUser" \
+   -s "$cmPassword" \
+   --accept-eula \
+   -v "$VMSIZE" \
+   -k "$ssh_keypath"

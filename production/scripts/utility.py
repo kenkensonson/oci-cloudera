@@ -1805,9 +1805,7 @@ def parse_options():
     cmx_config_options = {'ssh_root_password': None, 'ssh_root_user': 'root', 'ssh_private_key': None,
                           'cluster_name': 'Cluster 1', 'cluster_version': 'CDH5',
                           'username': 'cmadmin', 'password': 'cmpassword', 'cm_server': None,
-                          'host_names': None, 'license_file': None, 'parcel': [], 'company': None,
-                          'email': None, 'phone': None, 'fname': None, 'lname': None, 'jobrole': None,
-                          'jobfunction': None, 'vmsize': None, 'do_post': True}
+                          'host_names': None, 'license_file': None, 'parcel': [], 'vmsize': None, 'do_post': True}
 
     def cmx_args(option, opt_str, value, *args, **kwargs):
         if option.dest == 'host_names':
@@ -1902,20 +1900,6 @@ def parse_options():
                       callback=cmx_args, help='Set Cloudera Manager Username')
     parser.add_option('-s', '--cm-password', dest='password', type="string", action='callback',
                       callback=cmx_args, help='Set Cloudera Manager Password')
-    parser.add_option('-r', '--email-address', dest='email', type="string", action='callback',
-                      callback=cmx_args, help='Set email address')
-    parser.add_option('-b', '--business-phone', dest='phone', type="string", action='callback',
-                      callback=cmx_args, help='Set phone')
-    parser.add_option('-f', '--first-name', dest='fname', type="string", action='callback',
-                      callback=cmx_args, help='Set first name')
-    parser.add_option('-t', '--last-name', dest='lname', type="string", action='callback',
-                      callback=cmx_args, help='Set last name')
-    parser.add_option('-o', '--job-role', dest='jobrole', type="string", action='callback',
-                      callback=cmx_args, help='Set job role')
-    parser.add_option('-i', '--job-function', dest='jobfunction', type="string", action='callback',
-                      callback=cmx_args, help='Set job function')
-    parser.add_option('-y', '--company', dest='company', type="string", action='callback',
-                      callback=cmx_args, help='Set company')
     parser.add_option('-e', '--accept-eula', dest='accepted', action="store_true", default=False,
                       help='Must accept eula before install')
     parser.add_option('-v', '--vmsize', dest='vmsize', type="string", action="callback",
@@ -1990,21 +1974,18 @@ def log(msg):
     print time.strftime("%X") + ": " + msg
 
 
-def postEulaInfo(firstName, lastName, emailAddress, company, jobRole, jobFunction, businessPhone):
-    elqFormName = 'Cloudera_Azure_EULA'
-    elqSiteID = '1465054361'
-    cid = '70134000001PsLS'
+def postEulaInfo():
     url = 'https://s1465054361.t.eloqua.com/e/f2'
-    data = urllib.urlencode({'elqFormName': elqFormName,
-                             'elqSiteID': elqSiteID,
-                             'cid': cid,
-                             'firstName': firstName,
-                             'lastName': lastName,
-                             'company': company,
-                             'emailAddress': emailAddress,
-                             'jobRole': jobRole,
-                             'jobFunction': jobFunction,
-                             'businessPhone': businessPhone
+    data = urllib.urlencode({'elqFormName': 'Cloudera_Azure_EULA',
+                             'elqSiteID': '1465054361',
+                             'cid': '70134000001PsLS',
+                             'firstName': 'Big',
+                             'lastName': 'Data',
+                             'company': 'Foo',
+                             'emailAddress': 'foo@bar.com',
+                             'jobRole': 'Things',
+                             'jobFunction': 'Things',
+                             'businessPhone': '8675309'
                              })
     results = urllib2.urlopen(url, data)
     with open('results.html', 'w') as f:
@@ -2019,8 +2000,8 @@ def main():
     diskcount = getDataDiskCount()
     log("data_disk_count" + `diskcount`)
     if(cmx.do_post):
-        postEulaInfo(cmx.fname, cmx.lname, cmx.email, cmx.company,
-                     cmx.jobrole, cmx.jobfunction, cmx.phone)
+        postEulaInfo()
+
     # Prepare Cloudera Manager Server:
     # 1. Initialise Cluster and set Cluster name: 'Cluster 1'
     # 3. Add hosts into: 'Cluster 1'
