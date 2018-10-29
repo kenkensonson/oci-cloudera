@@ -53,8 +53,8 @@ ClusterName="TestCluster"
 cmUser="cdhadmin"
 cmPassword="somepassword"
 
-# cdh-master[0-99].private[0-2].cloudera.oraclevcn.com
-# cdh-worker[0-99].private[0-2].cloudera.oraclevcn.com
+# cdh-master[0-99]
+# cdh-worker[0-99]
 
  python utility.py \
    --highavailable \

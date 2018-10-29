@@ -1924,19 +1924,6 @@ def parse_options():
         elif cmx_config_options['ssh_private_key'] and cmx_config_options['ssh_root_password']:
             parser.error(msg_req_args +
                          "-p/--ssh-root-password _OR_ -k/--ssh-private-key")
-    if (cmx_config_options['email'] is None or cmx_config_options['phone'] is None or
-        cmx_config_options['fname'] is None or cmx_config_options['lname'] is None or
-        cmx_config_options['jobrole'] is None or cmx_config_options['jobfunction'] is None or
-        cmx_config_options['company'] is None or
-            options.accepted is not True):
-
-        eula_result = display_eula()
-        if(eula_result):
-            cmx_config_options['do_post'] = False
-        else:
-            parser.error(msg_req_args + 'please provide email, phone, firstname, lastname, jobrole, jobfunction, company and accept eula'
-                         + '-r/--email-address, -b/--business-phone, -f/--first-name, -t/--last-name, -o/--job-role, -i/--job-function,'
-                         + '-y/--company, -e/--accept-eula')
 
     # Management services password. They are required when adding Management services
     management = ManagementActions
@@ -1993,52 +1980,42 @@ def postEulaInfo():
 
 
 def main():
-    # Parse user options
     log("parse_options")
     options = parse_options()
+
     global diskcount
     diskcount = getDataDiskCount()
     log("data_disk_count" + `diskcount`)
+
     if(cmx.do_post):
         postEulaInfo()
 
-    # Prepare Cloudera Manager Server:
-    # 1. Initialise Cluster and set Cluster name: 'Cluster 1'
-    # 3. Add hosts into: 'Cluster 1'
-    # 4. Deploy latest parcels into : 'Cluster 1'
     log("init_cluster")
     init_cluster()
+
     log("add_hosts_to_cluster")
     add_hosts_to_cluster()
+
     # Un-comment the following two entries to enable rack topology for AD spanning.
     # log("host_rack")
     # host_rack()
-    # Deploy CDH Parcel
+
     log("deploy_parcel")
     deploy_parcel(parcel_product=cmx.parcel[0]['product'],
                   parcel_version=cmx.parcel[0]['version'])
 
     log("setup_management")
-    # Example CM API to setup Cloudera Manager Management services - not installing 'ACTIVITYMONITOR'
-    mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER',
-                  'EVENTSERVER', 'HOSTMONITOR']
+    mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
     if management.licensed():
         mgmt_roles.append('REPORTSMANAGER')
     management(*mgmt_roles).setup()
-    # "START" Management roles
     management(*mgmt_roles).start()
-    # "STOP" Management roles
-    # management_roles(*mgmt_services).stop()
 
-    # Upload license or Begin Trial
     if options.license_file:
         management.upload_license()
     else:
         management.begin_trial()
 
-    # Step-Through - Setup services in order of service dependencies
-    # Zookeeper, hdfs, HBase, Solr, Spark, Yarn,
-    # Hive, Sqoop, Sqoop Client, Impala, Oozie, Hue
     log("setup_components")
     setup_zookeeper(options.highAvailability)
     setup_hdfs(options.highAvailability)
@@ -2087,32 +2064,4 @@ def main():
     # setup_kerberos()
     # setup_sentry()
 
-    print "Enjoy!"
-
-
-if __name__ == "__main__":
-    print "%s" % '- ' * 20
-    print "Version: %s" % __version__
-    print "%s" % '- ' * 20
-    main()
-
-    #   def setup_template():
-    #     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    #     cluster = api.get_cluster(cmx.cluster_name)
-    #     service_type = ""
-    #     if cdh.get_service_type(service_type) is None:
-    #         service_name = ""
-    #         cluster.create_service(service_name.lower(), service_type)
-    #         service = cluster.get_service(service_name)
-    #
-    #         # Service-Wide
-    #         service.update_config(cdh.dependencies_for(service))
-    #
-    #         hosts = sorted([x for x in api.get_all_hosts()], key=lambda x: x.ipAddress, reverse=False)
-    #
-    #         # - Default Group
-    #         role_group = service.get_role_config_group("%s-x-BASE" % service.name)
-    #         role_group.update_config({})
-    #         cdh.create_service_role(service, "X", [x for x in hosts if x.id == 0][0])
-    #
-#         check.status_for_command("Starting x Service", service.start())
+main()
