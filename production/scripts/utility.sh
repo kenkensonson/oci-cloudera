@@ -9,7 +9,9 @@ yum install -y oracle-j2sdk1.8
 
 # Step 3: Install Cloudera Manager Server
 yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-server
-JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
+
+# I wonder if turning off auto TLS will resolve the hostname/fqdn issues I'm seeing
+#JAVA_HOME=/usr/java/jdk1.8.0_141-cloudera /opt/cloudera/cm-agent/bin/certmanager setup --configure-services
 
 # Step 4: Install Databases
 yum install -y postgresql-server
