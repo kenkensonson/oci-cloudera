@@ -53,8 +53,8 @@ ClusterName="TestCluster"
 cmUser="cdhadmin"
 cmPassword="somepassword"
 
-# cdh-master[0-99]
-# cdh-worker[0-99]
+# master[0-99]
+# worker[0-99]
 
  python utility.py \
    --highavailable \
