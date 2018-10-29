@@ -1,8 +1,8 @@
 resource "oci_core_instance" "utility" {
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "cdh-utility"
-  hostname_label      = "cdh-utility"
+  display_name        = "utility"
+  hostname_label      = "utility"
   shape               = "${var.utility["shape"]}"
   subnet_id           = "${oci_core_subnet.public.*.id[0]}"
 
@@ -25,7 +25,7 @@ resource "oci_core_instance" "utility" {
 
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
   instance_id         = "${oci_core_instance.utility.id}"
 }
 
@@ -34,9 +34,9 @@ data "oci_core_vnic" "utility_vnic" {
 }
 
 resource "oci_core_volume" "utility" {
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0],"name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "cdh-utility-volume0"
+  display_name        = "utility-volume0"
   size_in_gbs         = "${var.utility["size_in_gbs"]}"
 }
 
@@ -47,4 +47,6 @@ resource "oci_core_volume_attachment" "utility0" {
   volume_id       = "${oci_core_volume.utility.id}"
 }
 
-output "Cloudera Manager" { value = "http://${data.oci_core_vnic.utility_vnic.public_ip_address}:7180" }
+output "Cloudera Manager" {
+  value = "http://${data.oci_core_vnic.utility_vnic.public_ip_address}:7180"
+}
