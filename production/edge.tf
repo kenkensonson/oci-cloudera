@@ -1,10 +1,10 @@
-resource "oci_core_instance" "worker" {
-  count               = "${var.worker["node_count"]}"
+resource "oci_core_instance" "edge" {
+  count               = "${var.edge["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "worker${count.index}"
-  hostname_label      = "worker${count.index}"
-  shape               = "${var.worker["shape"]}"
+  display_name        = "edge${count.index}"
+  hostname_label      = "edge${count.index}"
+  shape               = "${var.edge["shape"]}"
   subnet_id           = "${oci_core_subnet.private.*.id[count.index%var.availability_domains]}"
 
   source_details {
@@ -21,18 +21,18 @@ resource "oci_core_instance" "worker" {
   }
 }
 
-resource "oci_core_volume" "worker" {
-  count               = "${var.worker["node_count"]}"
+resource "oci_core_volume" "edge" {
+  count               = "${var.edge["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "worker${count.index}-volume0"
-  size_in_gbs         = "${var.worker["size_in_gbs"]}"
+  display_name        = "edge${count.index}-volume0"
+  size_in_gbs         = "${var.edge["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "worker" {
-  count           = "${var.worker["node_count"]}"
+resource "oci_core_volume_attachment" "edge" {
+  count           = "${var.edge["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.worker.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.worker.*.id[count.index]}"
+  instance_id     = "${oci_core_instance.edge.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.edge.*.id[count.index]}"
 }

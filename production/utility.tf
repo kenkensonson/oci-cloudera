@@ -1,17 +1,16 @@
 resource "oci_core_instance" "utility" {
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
+  count               = "${var.utility["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "utility"
-  hostname_label      = "utility"
+  display_name        = "utility${count.index}"
+  hostname_label      = "utility${count.index}"
   shape               = "${var.utility["shape"]}"
-  subnet_id           = "${oci_core_subnet.public.*.id[0]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[count.index%var.availability_domains]}"
 
   source_details {
     source_type = "image"
     source_id   = "${var.images[var.region]}"
   }
-
-  #      "echo ${base64encode(file("scripts/utility.py"))} | base64 --decode > utility.py",
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
@@ -25,7 +24,7 @@ resource "oci_core_instance" "utility" {
 
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   instance_id         = "${oci_core_instance.utility.id}"
 }
 
@@ -34,17 +33,19 @@ data "oci_core_vnic" "utility_vnic" {
 }
 
 resource "oci_core_volume" "utility" {
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[0], "name")}"
+  count               = "${var.utility["node_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
-  display_name        = "utility-volume0"
+  display_name        = "utility${count.index}-volume0"
   size_in_gbs         = "${var.utility["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "utility0" {
+resource "oci_core_volume_attachment" "utility" {
+  count           = "${var.utility["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.utility.id}"
-  volume_id       = "${oci_core_volume.utility.id}"
+  instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.utility.*.id[count.index]}"
 }
 
 output "Cloudera Manager" {

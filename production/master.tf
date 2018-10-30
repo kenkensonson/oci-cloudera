@@ -21,7 +21,7 @@ resource "oci_core_instance" "master" {
   }
 }
 
-resource "oci_core_volume" "master0" {
+resource "oci_core_volume" "master" {
   count               = "${var.master["node_count"]}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
@@ -29,10 +29,10 @@ resource "oci_core_volume" "master0" {
   size_in_gbs         = "${var.master["size_in_gbs"]}"
 }
 
-resource "oci_core_volume_attachment" "master0" {
+resource "oci_core_volume_attachment" "master" {
   count           = "${var.master["node_count"]}"
   attachment_type = "iscsi"
   compartment_id  = "${var.compartment_ocid}"
   instance_id     = "${oci_core_instance.master.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.master0.*.id[count.index]}"
+  volume_id       = "${oci_core_volume.master.*.id[count.index]}"
 }
