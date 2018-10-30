@@ -15,9 +15,6 @@ yum install -y cloudera-manager-daemons cloudera-manager-agent cloudera-manager-
 
 # Step 4: Install Databases
 yum install -y postgresql-server
-yum install -y python-pip
-pip install --upgrade pip
-pip install psycopg2==2.7.5 --ignore-installed
 
 # Step 4.1: Make sure that LC_ALL is set to en_US.UTF-8 and initialize the database
 echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
