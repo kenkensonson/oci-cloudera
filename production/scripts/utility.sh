@@ -33,8 +33,6 @@ host    all             all             127.0.0.1/32            ident
 host    all             all             ::1/128                 ident
 " > /var/lib/pgsql/data/pg_hba.conf
 
-# host    all             all             127.0.0.1/32            md5
-
 echo "listen_addresses = '*'
 " >> /var/lib/pgsql/data/postgresql.conf
 
@@ -47,17 +45,6 @@ for DATABASENAME in scm amon rman hue metastore sentry nav navms oozie; do
   sudo -u postgres psql -c "CREATE ROLE ${DATABASENAME} LOGIN PASSWORD 'password';"
   sudo -u postgres psql -c "CREATE DATABASE ${DATABASENAME} OWNER ${DATABASENAME} ENCODING 'UTF8';"
   sudo -u postgres psql -c "ALTER DATABASE ${DATABASENAME} SET standard_conforming_strings=off;"
-
-  sudo -u postgres createuser --login testuser
-  sudo -u postgres createdb --owner=testuser testdb
-
-  sudo -u postgres psql -c "CREATE USER foo WITH PASSWORD 'password';"
-  sudo -u postgres psql -c "CREATE DATABASE foo OWNER foo ENCODING 'UTF8';"
-
-  sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'password';"
-
-
-
 done
 /opt/cloudera/cm/schema/scm_prepare_database.sh postgresql scm scm password
 
