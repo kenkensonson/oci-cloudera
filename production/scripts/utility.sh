@@ -24,15 +24,19 @@ echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
 su -l postgres -c "postgresql-setup initdb"
 
 # Step 4.2: Enable MD5 authentication.
-CONF_FILE=/var/lib/pgsql/data/pg_hba.conf
-sed -i '/host.*127.*ident/i \host    all         all         127.0.0.1/32          md5  \ ' ${CONF_FILE}
-#sed -e '/^listen_addresses\s*=/d' -i ${CONF_FILE}
+ip=$(hostname -I)
+ip=${ip%?}
+echo "# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+host    all             all             $(hostname -I)/32       md5
+host    all             all             127.0.0.1/32            ident
+host    all             all             ::1/128                 ident
+" > /var/lib/pgsql/data/pg_hba.conf
 
-# Step 4.3: Configure settings to ensure your system performs as expected.
-#/var/lib/pgsql/data/postgresql.conf
-#sed -e '/^max_connections\s*=/d' -i "$CONF_FILE"
-#sed -e '/^shared_buffers\s*=/d' -i "$CONF_FILE"
-#sed -e '/^standard_conforming_strings\s*=/d' -i "$CONF_FILE"
+echo "
+listen_addresses = '*'
+" >> /var/lib/pgsql/data/postgresql.conf
 
 # Step 4.4: Configure the PostgreSQL server to start at boot.
 systemctl enable postgresql
