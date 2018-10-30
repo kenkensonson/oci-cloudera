@@ -52,6 +52,8 @@ cmPassword="somepassword"
 
 # master[0-99]
 # worker[0-99]
+# edge[0-99]
+# utility[0-99]
 
  python utility.py \
    --highavailable \
