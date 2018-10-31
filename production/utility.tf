@@ -14,8 +14,9 @@ resource "oci_core_instance" "utility" {
 
   metadata {
     ssh_authorized_keys = "${var.ssh_public_key}"
-    user_data = "${base64encode(format("%s\n%s\n%s\n",
+    user_data = "${base64encode(format("%s\n%s\n%s\n%s\n",
       "#!/usr/bin/env bash",
+      "ssh_private_key=${var.ssh_private_key}",
       file("scripts/shared.sh"),
       file("scripts/utility.sh")
     ))}"

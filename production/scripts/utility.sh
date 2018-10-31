@@ -45,24 +45,17 @@ done
 systemctl start cloudera-scm-server
 
 # Step 7: Set Up a Cluster
-VMSIZE=$(curl http://169.254.169.254/opc/v1/instance/shape)
-ClusterName="TestCluster"
-cmUser="cdhadmin"
-cmPassword="somepassword"
-
-# master[0-99]
-# worker[0-99]
-# edge[0-99]
-# utility[0-99]
+vm_size=$(curl http://169.254.169.254/opc/v1/instance/shape)
+host_names="master[0-99], worker[0-99], edge[0-99], utility[0-99]"
 
  python utility.py \
    --highavailable \
-   -n "$ClusterName" \
-   -u "$User" \
-   -m "$mip" -w \
-   "$cluster_host_ip" \
-   -c "$cmUser" \
-   -s "$cmPassword" \
+   --cluster-name cluster \
+   --ssh-root-user opc \
+   --cm-server localhost \
+   --host-names ${host_names} \
+   --cm-user admin \
+   --cm-password admin \
    --accept-eula \
-   -v "$VMSIZE" \
-   -k "$ssh_keypath"
+   --vmsize ${vm_size} \
+   --ssh-private-key ${ssh_private_key}
