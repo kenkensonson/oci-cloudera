@@ -22,4 +22,4 @@ for i in range(0,count):
     instance_id = i%node_count
     availability_domain = i%node_count%availability_domains
     volume_id = math.floor(i/node_count)
-    print(str(i) + '\t' + str(instance_id) + '\t\t' + str(volume_id) + '\t' + str(availability_domain))
+    print(str(i) + '\t' + str(instance_id) + '\t\t' + str(int(volume_id)) + '\t' + str(availability_domain))
