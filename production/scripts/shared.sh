@@ -40,6 +40,7 @@ service disable-thp start
 chkconfig disable-thp on
 
 # Starting with CDH 6, PostgreSQL-backed Hue requires the Psycopg2 version to be at least 2.5.4
+echo "Installing the python PostgreSQL driver..."
 yum install -y python-pip
 pip install --upgrade pip
 pip install psycopg2==2.7.5 --ignore-installed
