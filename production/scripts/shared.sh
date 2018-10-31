@@ -40,10 +40,6 @@ service disable-thp start
 chkconfig disable-thp on
 
 # Starting with CDH 6, PostgreSQL-backed Hue requires the Psycopg2 version to be at least 2.5.4
-#yum install -y python-pip
-#pip install --upgrade pip
-#pip install psycopg2==2.7.5 --ignore-installed
-
-#pip install pyopenssl ndg-httpsclient pyasn1
-#yum install libffi-devel -y
-#pip install "cm_api<20"
+yum install -y python-pip
+pip install --upgrade pip
+pip install psycopg2==2.7.5 --ignore-installed
