@@ -49,7 +49,7 @@ variable "master" {
   type = "map"
   default = {
     shape = "VM.Standard2.8"
-    node_count = 2
+    node_count = 0
     size_in_gbs = 1024
     disk_count = 1
   }
