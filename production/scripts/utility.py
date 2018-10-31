@@ -7,8 +7,6 @@ import hashlib
 import os
 import sys
 import random
-import paramiko
-from paramiko import SSHClient
 from time import sleep
 from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
@@ -85,33 +83,6 @@ def getParameterValue(vmsize, parameter):
         "VM.Standard1.8:dfs_replication": "1",
     }
     return switcher.get(vmsize + ":" + parameter)
-
-
-def getDataDiskCount():
-    bashCommand = "sudo lsblk | grep /data | grep -v /data/ | wc -l"
-    client = SSHClient()
-    client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
-    log(socket.getfqdn("cdh-worker0"))
-    toconnect = socket.getfqdn("cdh-worker0").replace("-mn0", "-dn0")
-    log(toconnect)
-    client.connect(toconnect, username=cmx.ssh_root_user, key_filename='/home/opc/.ssh/id_rsa')
-    stdin, stdout, stderr = client.exec_command(bashCommand)
-    count = stdout.readline().rstrip('\n')
-    return count
-
-
-def setZookeeperOwnerDir(HA):
-    os.system("sudo chown zookeeper:zookeeper " + LOG_DIR + "/zookeeper")
-    # setup other masters in HA environment
-    if HA:
-        client = SSHClient()
-        client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
-        toconnect = socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn1")
-        client.connect(toconnect, username=cmx.ssh_root_user, key_filename='/home/opc/.ssh/id_rsa')
-        client.exec_command("sudo chown zookeeper:zookeeper " + LOG_DIR + "/zookeeper")
-        toconnect = socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn2")
-        client.connect(toconnect, username=cmx.ssh_root_user, key_filename='/home/opc/.ssh/id_rsa')
-        client.exec_command("sudo chown zookeeper:zookeeper " + LOG_DIR + "/zookeeper")
 
 
 def init_cluster():
@@ -1984,7 +1955,7 @@ def main():
     options = parse_options()
 
     global diskcount
-    diskcount = getDataDiskCount()
+    diskcount = 5
     log("data_disk_count" + `diskcount`)
 
     if(cmx.do_post):
