@@ -1,11 +1,11 @@
 resource "oci_core_instance" "utility" {
   count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index % var.availability_domains], "name")}"
   compartment_id      = "${var.compartment_ocid}"
   display_name        = "utility${count.index}"
   hostname_label      = "utility${count.index}"
   shape               = "${var.utility["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[count.index%var.availability_domains]}"
+  subnet_id           = "${oci_core_subnet.private.*.id[count.index % var.availability_domains]}"
 
   source_details {
     source_type = "image"
@@ -22,6 +22,22 @@ resource "oci_core_instance" "utility" {
   }
 }
 
+resource "oci_core_volume" "utility" {
+  count               = "${var.utility["node_count"] * var.utility["disk_count"]}"
+  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index % var.utility["node_count"] % var.availability_domains], "name")}"
+  compartment_id      = "${var.compartment_ocid}"
+  display_name        = "utility${count.index % var.utility["node_count"]}-volume${floor(count.index / var.utility["node_count"])}"
+  size_in_gbs         = "${var.utility["size_in_gbs"]}"
+}
+
+resource "oci_core_volume_attachment" "utility" {
+  count           = "${var.utility["node_count"] * var.utility["disk_count"]}"
+  attachment_type = "iscsi"
+  compartment_id  = "${var.compartment_ocid}"
+  instance_id     = "${oci_core_instance.utility.*.id[count.index % var.utility["node_count"]]}"
+  volume_id       = "${oci_core_volume.utility.*.id[count.index]}"
+}
+
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
@@ -30,22 +46,6 @@ data "oci_core_vnic_attachments" "utility_vnics" {
 
 data "oci_core_vnic" "utility_vnic" {
   vnic_id = "${lookup(data.oci_core_vnic_attachments.utility_vnics.vnic_attachments[0], "vnic_id")}"
-}
-
-resource "oci_core_volume" "utility" {
-  count               = "${var.utility["node_count"]}"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
-  compartment_id      = "${var.compartment_ocid}"
-  display_name        = "utility${count.index}-volume0"
-  size_in_gbs         = "${var.utility["size_in_gbs"]}"
-}
-
-resource "oci_core_volume_attachment" "utility" {
-  count           = "${var.utility["node_count"]}"
-  attachment_type = "iscsi"
-  compartment_id  = "${var.compartment_ocid}"
-  instance_id     = "${oci_core_instance.utility.*.id[count.index]}"
-  volume_id       = "${oci_core_volume.utility.*.id[count.index]}"
 }
 
 output "Cloudera Manager" {
