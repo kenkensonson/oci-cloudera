@@ -30,7 +30,7 @@ variable "utility" {
     shape = "VM.Standard2.8"
     node_count = 1
     size_in_gbs = 1024
-    disk_count = 1
+    disk_count = 0
   }
 }
 
@@ -58,9 +58,9 @@ variable "worker" {
   type = "map"
   default = {
     shape = "VM.Standard2.4"
-    node_count = 7
+    node_count = 3
     size_in_gbs = 1024
-    disk_count = 5
+    disk_count = 2
   }
 }
 
