@@ -57,10 +57,10 @@ variable "master" {
 variable "worker" {
   type = "map"
   default = {
-    shape = "VM.Standard2.24"
-    node_count = 3
+    shape = "VM.Standard2.4"
+    node_count = 7
     size_in_gbs = 1024
-    disk_count = 3
+    disk_count = 5
   }
 }
 
