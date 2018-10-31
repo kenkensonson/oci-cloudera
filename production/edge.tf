@@ -5,7 +5,7 @@ resource "oci_core_instance" "edge" {
   display_name        = "edge${count.index}"
   hostname_label      = "edge${count.index}"
   shape               = "${var.edge["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[count.index % var.availability_domains]}"
+  subnet_id           = "${oci_core_subnet.public.*.id[count.index % var.availability_domains]}"
 
   source_details {
     source_type = "image"

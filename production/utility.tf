@@ -5,7 +5,7 @@ resource "oci_core_instance" "utility" {
   display_name        = "utility${count.index}"
   hostname_label      = "utility${count.index}"
   shape               = "${var.utility["shape"]}"
-  subnet_id           = "${oci_core_subnet.private.*.id[count.index % var.availability_domains]}"
+  subnet_id           = "${oci_core_subnet.public.*.id[count.index % var.availability_domains]}"
 
   source_details {
     source_type = "image"
