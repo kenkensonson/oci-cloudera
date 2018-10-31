@@ -41,7 +41,7 @@ resource "oci_core_volume_attachment" "utility" {
 data "oci_core_vnic_attachments" "utility_vnics" {
   compartment_id      = "${var.compartment_ocid}"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index%var.availability_domains], "name")}"
-  instance_id         = "${oci_core_instance.utility.id}"
+  instance_id         = "${oci_core_instance.utility.*.id[0]}"
 }
 
 data "oci_core_vnic" "utility_vnic" {
