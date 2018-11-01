@@ -198,12 +198,7 @@ def getParameterValue(vmsize, parameter):
     }
     return switcher.get(vmsize + ":" + parameter)
 
-
 def init_cluster(options):
-    api = ApiResource(server_host="localhost", username="admin", password="admin")
-    cm = api.get_cloudera_manager()
-    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
-
     print "> Initialise Cluster"
     if options.cluster_name in [x.name for x in api.get_all_clusters()]:
         print "Cluster name: '%s' already exists" % options.cluster_name
@@ -212,39 +207,32 @@ def init_cluster(options):
         api.create_cluster(name=options.cluster_name, version="CDH6")
 
 
-def add_hosts_to_cluster():
-    print "> Add hosts to Cluster: %s" % cmx.cluster_name
-    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    cluster = api.get_cluster(cmx.cluster_name)
-    cm = api.get_cloudera_manager()
+def add_hosts_to_cluster(cm, options):
+    print "> Add hosts to Cluster: %s" % options.cluster_name
 
-    # deploy agents into host_list
-    host_list = list(set([socket.getfqdn(x) for x in cmx.host_names] + [socket.getfqdn(cmx.cm_server)]) - set([x.hostname for x in api.get_all_hosts()]))
+    host_list = list(set([socket.getfqdn(x) for x in options.host_names] + [socket.getfqdn("localhost")]) - set([x.hostname for x in api.get_all_hosts()]))
     if host_list:
-        cmd = cm.host_install(user_name=cmx.ssh_root_user, host_names=host_list, password=cmx.ssh_root_password, private_key=cmx.ssh_private_key)
-        print "Installing host(s) to cluster '%s' - [ http://%s:7180/cmf/command/%s/details ]" % (socket.getfqdn(cmx.cm_server), cmx.cm_server, cmd.id)
-        # STATUS CHECK HERE
-        #check.status_for_command("Hosts: %s " % host_list, cmd)
-        print "Installing hosts. This might take a while."
+        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=cmx.ssh_private_key)
+        print "Installing agents in cluster '%s' - [ http://%s:7180/cmf/command/%s/details ]" % (socket.getfqdn("localhost"), "localhost", cmd.id)
         while cmd.success == None:
             sleep(20)
             cmd = cmd.fetch()
-            print "Installing hosts... Checking"
+            print "Installing hosts..."
 
         if cmd.success != True:
             print "cm_host_install failed: " + cmd.resultMessage
             exit(1)
 
-    print "Host install finish, agents installed"
+    print "Agents installed!"
     hosts = []
     for host in api.get_all_hosts():
         if host.hostId not in [x.hostId for x in cluster.list_hosts()]:
             print "Adding {'ip': '%s', 'hostname': '%s', 'hostId': '%s'}" % (host.ipAddress, host.hostname, host.hostId)
             hosts.append(host.hostId)
 
-    print "adding new hosts to cluster"
+    print "Adding new hosts to cluster..."
     if hosts:
-        print "Adding hostId(s) to '%s'" % cmx.cluster_name
+        print "Adding hostId(s) to '%s'" % options.cluster_name
         print "%s" % hosts
         cluster.add_hosts(hosts)
 
@@ -1507,10 +1495,14 @@ def main():
     parser=setupArguments()
     options=parser.parse_args()
 
-    init_cluster(options)
+    api = ApiResource(server_host="localhost", username="admin", password="admin")
+    cm = api.get_cloudera_manager()
+    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
+
+    init_cluster(cm, options)
+    add_hosts_to_cluster(cm, options)
 
     '''
-    add_hosts_to_cluster()
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
     if management.licensed():
