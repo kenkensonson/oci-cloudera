@@ -55,7 +55,5 @@ disk_count=5
 python utility.py \
   --host_names ${host_names} \
   --ssh_private_key ${ssh_private_key} \
-  --username admin \
-  --password admin \
   --vm_size ${vm_size} \
   --disk_count ${disk_count}

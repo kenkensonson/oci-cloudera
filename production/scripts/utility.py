@@ -19,8 +19,6 @@ def setupArguments():
 
     required.add_argument('--host_names', required=True, type=str, help='Node list, separate with commas: host1,host2,...,host(n)')
     required.add_argument('--ssh_private_key', required=True, type=str, help='The private key to authenticate with the hosts')
-    required.add_argument('--username', required=True, type=str, help='Set Cloudera Manager Username')
-    required.add_argument('--password', required=True, type=str, help='Set Cloudera Manager Password')
     required.add_argument('--vm_size', required=True, type=str, help='VM Size for CPU and Memory Setup')
     required.add_argument('--disk_count', required=True, type=int, help='Number of Data Disks on Each Node')
     parser.add_argument('--cluster_name', type=str, default='cluster')
@@ -201,23 +199,17 @@ def getParameterValue(vmsize, parameter):
     return switcher.get(vmsize + ":" + parameter)
 
 
-def init_cluster():
-    # using default username/password to login first, create new admin user base on provided value, then delete admin
-    api = ApiResource(server_host=cmx.cm_server, username="admin", password="admin")
-    api.create_user(cmx.username, cmx.password, ['ROLE_ADMIN'])
-    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    api.delete_user("admin")
-
-    # Update Cloudera Manager configuration
+def init_cluster(options):
+    api = ApiResource(server_host="localhost", username="admin", password="admin")
     cm = api.get_cloudera_manager()
-    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh5/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
+    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
 
     print "> Initialise Cluster"
-    if cmx.cluster_name in [x.name for x in api.get_all_clusters()]:
-        print "Cluster name: '%s' already exists" % cmx.cluster_name
+    if options.cluster_name in [x.name for x in api.get_all_clusters()]:
+        print "Cluster name: '%s' already exists" % options.cluster_name
     else:
-        print "Creating cluster name '%s'" % cmx.cluster_name
-        api.create_cluster(name=cmx.cluster_name, version=cmx.cluster_version)
+        print "Creating cluster name '%s'" % options.cluster_name
+        api.create_cluster(name=options.cluster_name, version="CDH6")
 
 
 def add_hosts_to_cluster():
@@ -1515,7 +1507,7 @@ def main():
     parser=setupArguments()
     options=parser.parse_args()
 
-    init_cluster()
+    init_cluster(options)
 
     '''
     add_hosts_to_cluster()
