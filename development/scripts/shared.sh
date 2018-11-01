@@ -1,5 +1,5 @@
 echo "Setting up resolve.conf..."
-echo "search public0.cloudera.oraclevcn.com public1.cloudera.oraclevcn.com public2.cloudera.oraclevcn.com private0.cloudera.oraclevcn.com private1.cloudera.oraclevcn.com private2.cloudera.oraclevcn.com" > /etc/resolv.conf
+echo "search subnet0.cloudera.oraclevcn.com subnet1.cloudera.oraclevcn.com subnet2.cloudera.oraclevcn.com" > /etc/resolv.conf
 echo "nameserver 169.254.169.254" >> /etc/resolv.conf
 
 echo "Turning off the Firewall..."

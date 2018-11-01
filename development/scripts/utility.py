@@ -49,6 +49,34 @@ def init_cluster(api, options):
         api.create_cluster(name=options.cluster_name, version="CDH6")
 
 
+class ManagementActions:
+    def __init__(self, *role_list):
+        self._role_list = role_list
+        self._api = ApiResource(server_host='localhost', username='admin', password='admin')
+        self._cm = self._api.get_cloudera_manager()
+        try:
+            self._service = self._cm.get_service()
+        except ApiException:
+            self._service = self._cm.create_mgmt_service(ApiServiceSetupInfo())
+        self._role_types = [x.type for x in self._service.get_all_roles()]
+
+    def stop(self):
+        self._action('stop_roles')
+
+    def start(self):
+        self._action('start_roles')
+
+    def restart(self):
+        self._action('restart_roles')
+
+    def _action(self, action):
+        state = {'start_roles': ['STOPPED'], 'stop_roles': ['STARTED'], 'restart_roles': ['STARTED', 'STOPPED']}
+        for mgmt_role in [x for x in self._role_list if x in self._role_types]:
+            for role in [x for x in self._service.get_roles_by_type(mgmt_role) if x.roleState in state[action]]:
+                for cmd in getattr(self._service, action)(role.name):
+                    check.status_for_command("%s role %s" % (action.split("_")[0].upper(), mgmt_role), cmd)
+
+
 def add_hosts_to_cluster(api, options):
     print "> Add hosts to Cluster: %s" % options.cluster_name
     cluster = api.get_cluster(options.cluster_name)
@@ -1071,33 +1099,6 @@ def teardown(keep_cluster=True):
         api.delete_cluster(cmx.cluster_name)
 
 
-class ManagementActions:
-    def __init__(self, *role_list):
-        self._role_list = role_list
-        self._api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-        self._cm = self._api.get_cloudera_manager()
-        try:
-            self._service = self._cm.get_service()
-        except ApiException:
-            self._service = self._cm.create_mgmt_service(ApiServiceSetupInfo())
-        self._role_types = [x.type for x in self._service.get_all_roles()]
-
-    def stop(self):
-        self._action('stop_roles')
-
-    def start(self):
-        self._action('start_roles')
-
-    def restart(self):
-        self._action('restart_roles')
-
-    def _action(self, action):
-        state = {'start_roles': ['STOPPED'], 'stop_roles': ['STARTED'], 'restart_roles': ['STARTED', 'STOPPED']}
-        for mgmt_role in [x for x in self._role_list if x in self._role_types]:
-            for role in [x for x in self._service.get_roles_by_type(mgmt_role) if x.roleState in state[action]]:
-                for cmd in getattr(self._service, action)(role.name):
-                    check.status_for_command("%s role %s" % (action.split("_")[0].upper(), mgmt_role), cmd)
-
     def setup(self):
         # api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         print "> Setup Management Services"
@@ -1409,22 +1410,22 @@ def main():
     print(options)
 
     wait_for_cm_to_start()
-
+    
     api = ApiResource(server_host="localhost", username="admin", password="admin")
     api.get_cloudera_manager().update_config({'REMOTE_PARCEL_REPO_URLS': 'https://archive.cloudera.com/cdh6/6.0.1/parcels/'})
 
     init_cluster(api, options)
+
+    managementActions = ManagementActions
+    mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
+    managementActions(*mgmt_roles).setup()
+    managementActions(*mgmt_roles).start()
+    managementActions.begin_trial()
+
     add_hosts_to_cluster(api, options)
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
 
     '''
-    mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
-    if management.licensed():
-        mgmt_roles.append('REPORTSMANAGER')
-    management(*mgmt_roles).setup()
-    management(*mgmt_roles).start()
-    management.begin_trial()
-
     setup_zookeeper()
     setup_hdfs()
     setup_yarn()
