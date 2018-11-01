@@ -30,8 +30,11 @@ def init_cluster(api, options):
     cm = api.get_cloudera_manager()
     cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
 
-    print "Creating cluster name '%s'" % options.cluster_name
-    api.create_cluster(name=options.cluster_name, version="CDH6")
+    if cmx.cluster_name in [x.name for x in api.get_all_clusters()]:
+        print "Cluster name: '%s' already exists" % options.cluster_name
+    else:
+        print "Creating cluster name '%s'" % cmx.cluster_name
+        api.create_cluster(name=options.cluster_name, version="CDH6")
 
 
 def add_hosts_to_cluster(api, options):
