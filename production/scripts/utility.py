@@ -198,8 +198,11 @@ def getParameterValue(vmsize, parameter):
     }
     return switcher.get(vmsize + ":" + parameter)
 
-def init_cluster(options):
+def init_cluster(api, options):
     print "> Initialise Cluster"
+    cm = api.get_cloudera_manager()
+    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
+
     if options.cluster_name in [x.name for x in api.get_all_clusters()]:
         print "Cluster name: '%s' already exists" % options.cluster_name
     else:
@@ -207,12 +210,12 @@ def init_cluster(options):
         api.create_cluster(name=options.cluster_name, version="CDH6")
 
 
-def add_hosts_to_cluster(cm, options):
+def add_hosts_to_cluster(api, options):
     print "> Add hosts to Cluster: %s" % options.cluster_name
-
     host_list = list(set([socket.getfqdn(x) for x in options.host_names] + [socket.getfqdn("localhost")]) - set([x.hostname for x in api.get_all_hosts()]))
     if host_list:
-        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=cmx.ssh_private_key)
+        cm = api.get_cloudera_manager()
+        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=options.ssh_private_key)
         print "Installing agents in cluster '%s' - [ http://%s:7180/cmf/command/%s/details ]" % (socket.getfqdn("localhost"), "localhost", cmd.id)
         while cmd.success == None:
             sleep(20)
@@ -1496,11 +1499,9 @@ def main():
     options=parser.parse_args()
 
     api = ApiResource(server_host="localhost", username="admin", password="admin")
-    cm = api.get_cloudera_manager()
-    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
 
-    init_cluster(cm, options)
-    add_hosts_to_cluster(cm, options)
+    init_cluster(api, options)
+    add_hosts_to_cluster(api, options)
 
     '''
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
