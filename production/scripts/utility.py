@@ -78,6 +78,50 @@ def add_hosts_to_cluster(api, options):
     cluster.add_hosts(hosts)
 
 
+def deploy_parcel(parcel_product, parcel_version):
+    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
+    cluster = api.get_cluster(cmx.cluster_name)
+    parcel = cluster.get_parcel(parcel_product, parcel_version)
+    if parcel.stage != 'ACTIVATED':
+        print "> Deploying parcel: [ %s-%s ]" % (
+            parcel_product, parcel_version)
+        parcel.start_download()
+        # unlike other commands, check progress by looking at parcel stage and status
+        while True:
+            parcel = cluster.get_parcel(parcel_product, parcel_version)
+            if parcel.stage == 'DISTRIBUTED' or parcel.stage == 'DOWNLOADED' or parcel.stage == 'ACTIVATED':
+                break
+            msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
+            sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
+            sys.stdout.flush()
+
+        print ""
+        print "1. Parcel Stage: %s" % parcel.stage
+        parcel.start_distribution()
+
+        while True:
+            parcel = cluster.get_parcel(parcel_product, parcel_version)
+            if parcel.stage == 'DISTRIBUTED' or parcel.stage == 'ACTIVATED':
+                break
+            msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
+            sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
+            sys.stdout.flush()
+
+        print "2. Parcel Stage: %s" % parcel.stage
+        if parcel.stage == 'DISTRIBUTED':
+            parcel.activate()
+
+        while True:
+            parcel = cluster.get_parcel(parcel_product, parcel_version)
+            if parcel.stage != 'ACTIVATED':
+                msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
+                sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
+                sys.stdout.flush()
+            else:
+                print "3. Parcel Stage: %s" % parcel.stage
+                break
+
+
 def getParameterValue(vmsize, parameter):
     log("vmsize: " + vmsize + ", parameter:" + parameter)
     switcher = {
@@ -172,50 +216,6 @@ def host_rack():
         hosts.append(h)
 
     hosts.append(hosts)
-
-
-def deploy_parcel(parcel_product, parcel_version):
-    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    cluster = api.get_cluster(cmx.cluster_name)
-    parcel = cluster.get_parcel(parcel_product, parcel_version)
-    if parcel.stage != 'ACTIVATED':
-        print "> Deploying parcel: [ %s-%s ]" % (
-            parcel_product, parcel_version)
-        parcel.start_download()
-        # unlike other commands, check progress by looking at parcel stage and status
-        while True:
-            parcel = cluster.get_parcel(parcel_product, parcel_version)
-            if parcel.stage == 'DISTRIBUTED' or parcel.stage == 'DOWNLOADED' or parcel.stage == 'ACTIVATED':
-                break
-            msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
-            sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
-            sys.stdout.flush()
-
-        print ""
-        print "1. Parcel Stage: %s" % parcel.stage
-        parcel.start_distribution()
-
-        while True:
-            parcel = cluster.get_parcel(parcel_product, parcel_version)
-            if parcel.stage == 'DISTRIBUTED' or parcel.stage == 'ACTIVATED':
-                break
-            msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
-            sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
-            sys.stdout.flush()
-
-        print "2. Parcel Stage: %s" % parcel.stage
-        if parcel.stage == 'DISTRIBUTED':
-            parcel.activate()
-
-        while True:
-            parcel = cluster.get_parcel(parcel_product, parcel_version)
-            if parcel.stage != 'ACTIVATED':
-                msg = " [%s: %s / %s]" % (parcel.stage, parcel.state.progress, parcel.state.totalProgress)
-                sys.stdout.write(msg + " " * (78 - len(msg)) + "\r")
-                sys.stdout.flush()
-            else:
-                print "3. Parcel Stage: %s" % parcel.stage
-                break
 
 
 def setup_zookeeper(HA):
@@ -1415,9 +1415,9 @@ def main():
     api = ApiResource(server_host="localhost", username="admin", password="admin")
     init_cluster(api, options)
     add_hosts_to_cluster(api, options)
+    deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
 
     '''
-    deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
     if management.licensed():
         mgmt_roles.append('REPORTSMANAGER')
