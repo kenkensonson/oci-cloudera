@@ -1503,11 +1503,13 @@ class ActiveCommands:
 def main():
     parser=setupArguments()
     options=parser.parse_args()
+    options.host_list=options.host_list.split(",")
+    print(options)
 
     api = ApiResource(server_host="localhost", username="admin", password="admin")
 
-    init_cluster(api, options)
-    add_hosts_to_cluster(api, options)
+    #init_cluster(api, options)
+    #add_hosts_to_cluster(api, options)
 
     '''
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
