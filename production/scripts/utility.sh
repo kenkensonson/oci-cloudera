@@ -63,4 +63,5 @@ python utility.py \
   --cm-password admin \
   --accept-eula \
   --vmsize ${vm_size} \
-  --ssh-private-key ${ssh_private_key}
+  --ssh-private-key ${ssh_private_key} \
+  --diskcount 5

@@ -12,6 +12,139 @@ from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
 from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 
+def parse_options():
+    parser = OptionParser()
+    parser.add_option('-m', '--cm-server', dest='cm_server', type="string", action='callback', callback=cmx_args, help='*Set Cloudera Manager Server Host. ' 'Note: This is the host where the Cloudera Management Services get installed.')
+    parser.add_option('-w', '--host-names', dest='host_names', type="string", action='callback', callback=cmx_args, help='*Set target node(s) list, separate with comma eg: -w host1,host2,...,host(n). ' 'Note:' ' - enclose in double quote, also avoid leaving spaces between commas.' ' - CM_SERVER excluded in this list, if you want install CDH Services in CM_SERVER' ' add the host to this list.')
+    parser.add_option('-n', '--cluster-name', dest='cluster_name', type="string", action='callback', callback=cmx_args, default='Cluster 1', help='Set Cloudera Manager Cluster name enclosed in double quotes. Default "Cluster 1"')
+    parser.add_option('-u', '--ssh-root-user', dest='ssh_root_user', type="string", action='callback', callback=cmx_args, default='root', help='Set target node(s) ssh username. Default root')
+    parser.add_option('-p', '--ssh-root-password', dest='ssh_root_password', type="string", action='callback', callback=cmx_args, help='*Set target node(s) ssh password..')
+    parser.add_option('-k', '--ssh-private-key', dest='ssh_private_key', type="string", action='callback', callback=cmx_args, help='The private key to authenticate with the hosts. ' 'Specify either this or a password.')
+    parser.add_option('-l', '--license-file', dest='license_file', type="string", action='callback', callback=cmx_args, help='Cloudera Manager License file name')
+    parser.add_option('-d', '--teardown', dest='teardown', action="store", type="string", help='Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".')
+    parser.add_option('-a', '--highavailable', dest='highAvailability', action="store_true", default=False, help='Create a High Availability cluster')
+    parser.add_option('-c', '--cm-user', dest='username', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Username')
+    parser.add_option('-s', '--cm-password', dest='password', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Password')
+    parser.add_option('-e', '--accept-eula', dest='accepted', action="store_true", default=False, help='Must accept eula before install')
+    parser.add_option('--vmsize', dest='vmsize', type="string", action="callback", callback=cmx_args, help='provide vmsize for setup')
+    parser.add_option('--diskcount', dest='diskcount', type="string", action="callback", callback=cmx_args, help='number of data disks on each node')
+    (options, args) = parser.parse_args()
+
+    global cmx
+    global check, cdh, management
+
+    cmx_config_options = {
+        'ssh_root_password': None,
+        'ssh_root_user': 'root',
+        'ssh_private_key': None,
+        'cluster_name': 'Cluster 1',
+        'cluster_version': 'CDH5',
+        'username': 'cmadmin',
+        'password': 'cmpassword',
+        'cm_server': None,
+        'host_names': None,
+        'license_file': None,
+        'parcel': [],
+        'vmsize': None,
+        'do_post': True
+    }
+
+    def cmx_args(option, opt_str, value, *args, **kwargs):
+        if option.dest == 'host_names':
+            print "switch %s value check: %s" % (opt_str, value)
+            for host in value.split(','):
+                if not hostname_resolves(host):
+                    exit(1)
+            else:
+                cmx_config_options[option.dest] = [
+                    socket.gethostbyname(x) for x in value.split(',')]
+        elif option.dest == 'cm_server':
+            print "switch %s value check: %s" % (opt_str, value)
+            cmx_config_options[option.dest] = socket.gethostbyname(value) if \
+                hostname_resolves(value) else exit(1)
+            retry_count = 5
+            while retry_count > 0:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                if not s.connect_ex((socket.gethostbyname(value), 7180)) == 0:
+                    print "Cloudera Manager Server is not started on %s " % value
+                    s.close()
+                    sleep(60)
+                else:
+                    break
+                retry_count -= 1
+            if retry_count == 0:
+                print "Couldn't connect to Cloudera Manager after 5 minutes, exiting"
+                exit(1)
+        elif option.dest == 'ssh_private_key':
+            with open(value, 'r') as f:
+                license_contents = f.read()
+            cmx_config_options[option.dest] = license_contents
+        else:
+            cmx_config_options[option.dest] = value
+
+    def hostname_resolves(hostname):
+        try:
+            if socket.gethostbyname(hostname) == '0.0.0.0':
+                print "Error [{'host': '%s', 'fqdn': '%s'}]" % \
+                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
+                return False
+            else:
+                print "Success [{'host': '%s', 'fqdn': '%s'}]" % \
+                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
+                return True
+        except socket.error:
+            print "Error 'host': '%s'" % hostname
+            return False
+
+    def manifest_to_dict(manifest_json):
+        if manifest_json:
+            dir_list = json.load(
+                urllib2.urlopen(manifest_json))['parcels'][0]['parcelName']
+            parcel_part = re.match(r"^(.*?)-(.*)-(.*?)$", dir_list).groups()
+            return {'product': str(parcel_part[0]).upper(), 'version': str(parcel_part[1]).lower()}
+        else:
+            raise Exception("Invalid manifest.json")
+
+    cmx_config_options['parcel'].append(manifest_to_dict('http://archive.cloudera.com/cdh5/parcels/5.15.1/manifest.json'))
+
+    msg_req_args = "Please specify the required arguments: "
+    if cmx_config_options['cm_server'] is None:
+        parser.error(msg_req_args + "-m/--cm-server")
+    else:
+        if not (cmx_config_options['ssh_private_key'] or cmx_config_options['ssh_root_password']):
+            parser.error(msg_req_args +
+                         "-p/--ssh-root-password or -k/--ssh-private-key")
+        elif cmx_config_options['host_names'] is None:
+            parser.error(msg_req_args + "-w/--host-names")
+        elif cmx_config_options['ssh_private_key'] and cmx_config_options['ssh_root_password']:
+            parser.error(msg_req_args +
+                         "-p/--ssh-root-password _OR_ -k/--ssh-private-key")
+
+    # Management services password. They are required when adding Management services
+    management = ManagementActions
+    if not (bool(management.get_mgmt_password("ACTIVITYMONITOR")) and bool(management.get_mgmt_password("REPORTSMANAGER"))):
+        exit(1)
+    else:
+        cmx_config_options['amon_password'] = management.get_mgmt_password("ACTIVITYMONITOR")
+        cmx_config_options['rman_password'] = management.get_mgmt_password("REPORTSMANAGER")
+        cmx_config_options['oozie_password'] = management.get_mgmt_password("OOZIE")
+        cmx_config_options['hive_password'] = management.get_mgmt_password("HIVEMETASTORESERVER")
+
+    cmx = type('', (), cmx_config_options)
+    check = ActiveCommands()
+    cdh = ServiceActions
+    if cmx_config_options['cm_server'] and options.teardown:
+        if options.teardown.lower() in ['remove_cluster', 'keep_cluster']:
+            teardown(keep_cluster=(options.teardown.lower() == 'keep_cluster'))
+            print "Bye!"
+            exit(0)
+        else:
+            print 'Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".'
+            exit(1)
+
+    return options
+
+
 def getParameterValue(vmsize, parameter):
     log("vmsize: " + vmsize + ", parameter:" + parameter)
     switcher = {
@@ -86,11 +219,6 @@ def getParameterValue(vmsize, parameter):
 
 
 def init_cluster():
-    """
-    Initialise Cluster
-    :return:
-    """
-
     # using default username/password to login first, create new admin user base on provided value, then delete admin
     api = ApiResource(server_host=cmx.cm_server, username="admin", password="admin")
     api.create_user(cmx.username, cmx.password, ['ROLE_ADMIN'])
@@ -110,11 +238,6 @@ def init_cluster():
 
 
 def add_hosts_to_cluster():
-    """
-    Add hosts to cluster
-    :return:
-    """
-
     print "> Add hosts to Cluster: %s" % cmx.cluster_name
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
@@ -152,11 +275,6 @@ def add_hosts_to_cluster():
 
 
 def host_rack():
-    """
-    Add host to rack
-    :return:
-    """
-
     print "> Add host to rack"
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
@@ -180,11 +298,6 @@ def host_rack():
 
 
 def deploy_parcel(parcel_product, parcel_version):
-    """
-    Deploy parcels
-    :return:
-    """
-
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     parcel = cluster.get_parcel(parcel_product, parcel_version)
@@ -229,13 +342,6 @@ def deploy_parcel(parcel_product, parcel_version):
 
 
 def setup_zookeeper(HA):
-    """
-    Zookeeper
-    > Waiting for ZooKeeper Service to initialize
-    Starting ZooKeeper Service
-    :return:
-    """
-
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "ZOOKEEPER"
@@ -277,14 +383,6 @@ def setup_zookeeper(HA):
 
 
 def setup_hdfs(HA):
-    """
-    HDFS
-    > Checking if the name directories of the NameNode are empty. Formatting HDFS only if empty.
-    Starting HDFS Service
-    > Creating HDFS /tmp directory
-    :return:
-    """
-
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "HDFS"
@@ -401,12 +499,6 @@ def setup_hdfs(HA):
 
 
 def setup_hbase():
-    """
-    HBase
-    > Creating HBase root directory
-    Starting HBase Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "HBASE"
@@ -439,26 +531,15 @@ def setup_hbase():
                             cdh.create_service_role(
                                 service, rcg.roleType, host)
 
-        # for role_type in ['HBASETHRIFTSERVER', 'HBASERESTSERVER']:
-        #    cdh.create_service_role(service, role_type, random.choice(hosts))
-
         for role_type in ['GATEWAY']:
             for host in management.get_hosts(include_cm_host=(role_type == 'GATEWAY')):
                 cdh.create_service_role(service, role_type, host)
 
-        check.status_for_command(
-            "Creating HBase root directory", service.create_hbase_root())
+        check.status_for_command("Creating HBase root directory", service.create_hbase_root())
         check.status_for_command("Starting HBase Service", service.start())
 
 
 def setup_solr():
-    """
-    Solr
-    > Initializing Solr in ZooKeeper
-    > Creating HDFS home directory for Solr
-    Starting Solr Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "SOLR"
@@ -482,22 +563,11 @@ def setup_solr():
                 for host in management.get_hosts(include_cm_host=True):
                     cdh.create_service_role(service, rcg.roleType, host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
-
-        # check.status_for_command("Initializing Solr in ZooKeeper", service._cmd('initSolr'))
-        # check.status_for_command("Creating HDFS home directory for Solr", service._cmd('createSolrHdfsHomeDir'))
         check.status_for_command("Initializing Solr in ZooKeeper", service.init_solr())
         check.status_for_command("Creating HDFS home directory for Solr", service.create_solr_hdfs_home_dir())
-        # This service is started later on
-        # check.status_for_command("Starting Solr Service", service.start())
 
 
 def setup_ks_indexer():
-    """
-    KS_INDEXER
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "KS_INDEXER"
@@ -522,15 +592,8 @@ def setup_ks_indexer():
                              "hbase_enable_replication": True})
         hbase.start()
 
-        # This service is started later on
-        # check.status_for_command("Starting Lily HBase Indexer Service", service.start())
-
 
 def setup_spark_on_yarn():
-    """
-    Sqoop Client
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "SPARK_ON_YARN"
@@ -554,25 +617,12 @@ def setup_spark_on_yarn():
         for host in management.get_hosts(include_cm_host=True):
             cdh.create_service_role(service, "GATEWAY", host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
-
         check.status_for_command("Execute command CreateSparkUserDirCommand on service Spark", service._cmd('CreateSparkUserDirCommand'))
         check.status_for_command("Execute command CreateSparkHistoryDirCommand on service Spark", service._cmd('CreateSparkHistoryDirCommand'))
         check.status_for_command("Execute command SparkUploadJarServiceCommand on service Spark", service._cmd('SparkUploadJarServiceCommand'))
 
-        # This service is started later on
-        # check.status_for_command("Starting Spark Service", service.start())
-
 
 def setup_yarn(HA):
-    """
-    Yarn
-    > Creating MR2 job history directory
-    > Creating NodeManager remote application log directory
-    Starting YARN (MR2 Included) Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "YARN"
@@ -613,9 +663,7 @@ def setup_yarn(HA):
                 cdh.create_service_role(service, rcg.roleType, rm_host_id)
             if rcg.roleType == "JOBHISTORY":
                 # yarn-JOBHISTORY - Default Group
-                rcg.update_config({"mr2_jobhistory_java_heapsize": "1000000000",
-                                   "mr2_jobhistory_log_dir": LOG_DIR + "/hadoop-mapreduce"})
-
+                rcg.update_config({"mr2_jobhistory_java_heapsize": "1000000000", "mr2_jobhistory_log_dir": LOG_DIR + "/hadoop-mapreduce"})
                 cdh.create_service_role(service, rcg.roleType, cmhost)
 
             if rcg.roleType == "NODEMANAGER":
@@ -644,31 +692,18 @@ def setup_yarn(HA):
         #print srm_host_id.hostId
         for role_type in ['NODEMANAGER']:
             for host in management.get_hosts(include_cm_host=False):
-                        #print host.hostId
                 if host.hostId != rm_host_id.hostId:
                     if host.hostId != srm_host_id.hostId:
                         cdh.create_service_role(service, role_type, host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
+        check.status_for_command("Creating MR2 job history directory", service.create_yarn_job_history_dir())
+        check.status_for_command("Creating NodeManager remote application log directory", service.create_yarn_node_manager_remote_app_log_dir())
 
-        check.status_for_command(
-            "Creating MR2 job history directory", service.create_yarn_job_history_dir())
-        check.status_for_command("Creating NodeManager remote application log directory",
-                                 service.create_yarn_node_manager_remote_app_log_dir())
-        # This service is started later on
-        # check.status_for_command("Starting YARN (MR2 Included) Service", service.start())
-
-        # Additional HA setting for yarn
     if HA:
         setup_yarn_ha()
 
 
 def setup_mapreduce(HA):
-    """
-    MapReduce
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "MAPREDUCE"
@@ -690,8 +725,7 @@ def setup_mapreduce(HA):
         for rcg in [x for x in service.get_all_role_config_groups()]:
             if rcg.roleType == "JOBTRACKER":
                 # mapreduce-JOBTRACKER - Default Group
-                rcg.update_config(
-                    {"jobtracker_mapred_local_dir_list": "/mapred/jt"})
+                rcg.update_config({"jobtracker_mapred_local_dir_list": "/mapred/jt"})
                 cdh.create_service_role(service, rcg.roleType, jk)
             if rcg.roleType == "TASKTRACKER":
                 # mapreduce-TASKTRACKER - Default Group
@@ -711,23 +745,8 @@ def setup_mapreduce(HA):
             for host in management.get_hosts(include_cm_host=(role_type == 'GATEWAY')):
                 cdh.create_service_role(service, role_type, host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
-
-        # This service is started later on
-        # check.status_for_command("Starting MapReduce Service", service.start())
-
 
 def setup_hive():
-    """
-    Hive
-    > Creating Hive Metastore Database
-    > Creating Hive Metastore Database Tables
-    > Creating Hive user directory
-    > Creating Hive warehouse directory
-    Starting Hive Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "HIVE"
@@ -750,14 +769,11 @@ def setup_hive():
         service_config.update(cdh.dependencies_for(service))
         service.update_config(service_config)
 
-        hcat = service.get_role_config_group(
-            "{0}-WEBHCAT-BASE".format(service_name))
+        hcat = service.get_role_config_group("{0}-WEBHCAT-BASE".format(service_name))
         hcat.update_config({"hcatalog_log_dir": LOG_DIR + "/hcatalog"})
-        hs2 = service.get_role_config_group(
-            "{0}-HIVESERVER2-BASE".format(service_name))
+        hs2 = service.get_role_config_group("{0}-HIVESERVER2-BASE".format(service_name))
         hs2.update_config({"hive_log_dir": LOG_DIR + "/hive"})
-        hms = service.get_role_config_group(
-            "{0}-HIVEMETASTORE-BASE".format(service_name))
+        hms = service.get_role_config_group("{0}-HIVEMETASTORE-BASE".format(service_name))
         hms.update_config({"hive_log_dir": LOG_DIR + "/hive"})
 
         # install to CM node, mingrui
@@ -768,23 +784,12 @@ def setup_hive():
         for host in management.get_hosts(include_cm_host=True):
             cdh.create_service_role(service, "GATEWAY", host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
-
         check.status_for_command("Creating Hive Metastore Database Tables", service.create_hive_metastore_tables())
         check.status_for_command("Creating Hive user directory", service.create_hive_userdir())
         check.status_for_command("Creating Hive warehouse directory", service.create_hive_warehouse())
-        # This service is started later on
-        # check.status_for_command("Starting Hive Service", service.start())
 
 
 def setup_sqoop():
-    """
-    Sqoop 2
-    > Creating Sqoop 2 user directory
-    Starting Sqoop 2 Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "SQOOP"
@@ -803,18 +808,10 @@ def setup_sqoop():
         cmhost = management.get_cmhost()
         cdh.create_service_role(service, "SQOOP_SERVER", cmhost)
 
-        # check.status_for_command("Creating Sqoop 2 user directory", service._cmd('createSqoopUserDir'))
-        check.status_for_command(
-            "Creating Sqoop 2 user directory", service.create_sqoop_user_dir())
-        # This service is started later on
-        # check.status_for_command("Starting Sqoop 2 Service", service.start())
+        check.status_for_command("Creating Sqoop 2 user directory", service.create_sqoop_user_dir())
 
 
 def setup_sqoop_client():
-    """
-    Sqoop Client
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "SQOOP_CLIENT"
@@ -832,20 +829,9 @@ def setup_sqoop_client():
         for host in management.get_hosts(include_cm_host=True):
             cdh.create_service_role(service, "GATEWAY", host)
 
-        # Example of deploy_client_config. Recommended to Deploy Cluster wide client config.
-        # cdh.deploy_client_config_for(service)
-
 
 def setup_impala(HA):
-    """
-    Impala
-    > Creating Impala user directory
-    Starting Impala Service
-    :return:
-    """
-
     default_impala_dir_list = ""
-
     impala_dir_list = default_impala_dir_list
 
     for x in range(int(diskcount)):
@@ -876,14 +862,9 @@ def setup_impala(HA):
             "{0}-IMPALAD-BASE".format(service_name))
         impalad.update_config({"log_dir": LOG_DIR + "/impalad",
                                "impalad_memory_limit": getParameterValue(cmx.vmsize, "impalad_memory_limit")})
-        # llama=service.get_role_config_group("{0}-LLAMA-BASE".format(service_name))
-        # llama.update_config({"log_dir": LOG_DIR+"/impala-llama",
-        #		     "llama_java_heapsize": "1073741824"})
-        ss = service.get_role_config_group(
-            "{0}-STATESTORE-BASE".format(service_name))
+        ss = service.get_role_config_group("{0}-STATESTORE-BASE".format(service_name))
         ss.update_config({"log_dir": LOG_DIR + "/statestore"})
-        cs = service.get_role_config_group(
-            "{0}-CATALOGSERVER-BASE".format(service_name))
+        cs = service.get_role_config_group("{0}-CATALOGSERVER-BASE".format(service_name))
         cs.update_config({"log_dir": LOG_DIR + "/catalogd"})
 
         cmhost = management.get_cmhost()
@@ -905,19 +886,11 @@ def setup_impala(HA):
                 if (host.id != cmhost.id):
                     cdh.create_service_role(service, "IMPALAD", host)
 
-        check.status_for_command(
-            "Creating Impala user directory", service.create_impala_user_dir())
+        check.status_for_command("Creating Impala user directory", service.create_impala_user_dir())
         check.status_for_command("Starting Impala Service", service.start())
 
 
 def setup_oozie():
-    """
-    Oozie
-    > Creating Oozie database
-    > Installing Oozie ShareLib in HDFS
-    Starting Oozie Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "OOZIE"
@@ -942,16 +915,9 @@ def setup_oozie():
 
         check.status_for_command("Creating Oozie database", service.create_oozie_db())
         check.status_for_command("Installing Oozie ShareLib in HDFS", service.install_oozie_sharelib())
-        # This service is started later on
-        # check.status_for_command("Starting Oozie Service", service.start())
 
 
 def setup_hue():
-    """
-    Hue
-    Starting Hue Service
-    :return:
-    """
     api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "HUE"
@@ -975,8 +941,6 @@ def setup_hue():
                 cdh.create_service_role(service, "HUE_SERVER", cmhost)
             if rcg.roleType == "KT_RENEWER":
                 rcg.update_config({"kt_renewer_log_dir": LOG_DIR + "/hue"})
-        # This service is started later on
-        # check.status_for_command("Starting Hue Service", service.start())
 
 
 def setup_flume():
@@ -991,19 +955,10 @@ def setup_flume():
         # Service-Wide
         service.update_config(cdh.dependencies_for(service))
         hosts = management.get_hosts()
-        cdh.create_service_role(
-            service, "AGENT", [x for x in hosts if x.id == 0][0])
-        # This service is started later on
-        # check.status_for_command("Starting Flume Agent", service.start())
+        cdh.create_service_role(service, "AGENT", [x for x in hosts if x.id == 0][0])
 
 
 def setup_hdfs_ha():
-    """
-    Setup hdfs-ha
-    :return:
-    """
-    # api = ApiResource(cmx.cm_server, username=cmx.username, password=cmx.password, version=6)
-    # cluster = api.get_cluster(cmx.cluster_name)
     try:
         print "> Setup HDFS-HA"
         hdfs = cdh.get_service_type('HDFS')
@@ -1069,12 +1024,6 @@ def setup_hdfs_ha():
 
 
 def setup_yarn_ha():
-    """
-    Setup yarn-ha
-    :return:
-    """
-    # api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    # cluster = api.get_cluster(cmx.cluster_name)
     print "> Setup YARN-HA"
     yarn = cdh.get_service_type('YARN')
     zookeeper = cdh.get_service_type('ZOOKEEPER')
@@ -1090,12 +1039,6 @@ def setup_yarn_ha():
 
 
 def setup_kerberos():
-    """
-    Setup Kerberos - work in progress
-    :return:
-    """
-    # api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
-    # cluster = api.get_cluster(cmx.cluster_name)
     print "> Setup Kerberos"
     hdfs = cdh.get_service_type('HDFS')
     zookeeper = cdh.get_service_type('ZOOKEEPER')
@@ -1118,8 +1061,7 @@ def setup_kerberos():
 
 
 def setup_sentry():
-    api = ApiResource(server_host=cmx.cm_server,
-                      username=cmx.username, password=cmx.password)
+    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     service_type = "SENTRY"
     if cdh.get_service_type(service_type) is None:
@@ -1151,27 +1093,18 @@ def setup_sentry():
         hive.update_config(cdh.dependencies_for(hive))
 
         # Disable HiveServer2 Impersonation - hive-HIVESERVER2-BASE - Default Group
-        role_group = hive.get_role_config_group(
-            "%s-HIVESERVER2-BASE" % hive.name)
+        role_group = hive.get_role_config_group("%s-HIVESERVER2-BASE" % hive.name)
         role_group.update_config({"hiveserver2_enable_impersonation": False})
-
-        # This service is started later on
-        # check.status_for_command("Starting Sentry Server", service.start())
 
 
 def setup_easy():
-    """
-    An example using auto_assign_roles() and auto_configure()
-    """
-    api = ApiResource(server_host=cmx.cm_server,
-                      username=cmx.username, password=cmx.password)
+    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     cluster = api.get_cluster(cmx.cluster_name)
     print "> Easy setup for cluster: %s" % cmx.cluster_name
     # Do not install these services
     do_not_install = ['KEYTRUSTEE', 'KMS', 'KS_INDEXER', 'ISILON', 'FLUME', 'MAPREDUCE', 'ACCUMULO',
                       'ACCUMULO16', 'SPARK_ON_YARN', 'SPARK', 'SOLR', 'SENTRY']
-    service_types = list(
-        set(cluster.get_service_types()) - set(do_not_install))
+    service_types = list(set(cluster.get_service_types()) - set(do_not_install))
 
     for service in service_types:
         cluster.create_service(name=service.lower(),
@@ -1195,12 +1128,7 @@ def setup_easy():
 
 
 def teardown(keep_cluster=True):
-    """
-    Teardown the Cluster
-    :return:
-    """
-    api = ApiResource(server_host=cmx.cm_server,
-                      username=cmx.username, password=cmx.password)
+    api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
     try:
         cluster = api.get_cluster(cmx.cluster_name)
         service_list = cluster.get_all_services()
@@ -1463,13 +1391,9 @@ class ManagementActions:
         """
         return cm host in the same format as other host
         """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
-
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         idx = len(set(enumerate(cmx.host_names)))
-
-        _host = [x for x in api.get_all_hosts() if x.ipAddress
-                 == socket.gethostbyname(cmx.cm_server)][0]
+        _host = [x for x in api.get_all_hosts() if x.ipAddress == socket.gethostbyname(cmx.cm_server)][0]
         cmhost = {
             'id': idx,
             'hostId': _host.hostId,
@@ -1750,230 +1674,16 @@ class ActiveCommands:
                 self._child_cmd(self._api.get("/commands/%s" %
                                               resMsg['id'])['children']['items'])
 
-
-def display_eula():
-
-    fname = raw_input("Please enter your first name: ")
-    lname = raw_input("Please enter your last name: ")
-    company = raw_input("Please enter your company: ")
-    email = raw_input("Please enter your email: ")
-    phone = raw_input("Please enter your phone: ")
-    jobrole = raw_input("Please enter your jobrole: ")
-    jobfunction = raw_input("Please enter your jobfunction: ")
-    accepted = raw_input("Please enter yes to accept EULA: ")
-    if accepted == 'yes' and fname and lname and company and email and phone and jobrole and jobfunction:
-        postEulaInfo(fname, lname, email, company,
-                     jobrole, jobfunction, phone)
-        return True
-    else:
-        return False
-
-
-def parse_options():
-    global cmx
-    global check, cdh, management
-
-    cmx_config_options = {'ssh_root_password': None, 'ssh_root_user': 'root', 'ssh_private_key': None,
-                          'cluster_name': 'Cluster 1', 'cluster_version': 'CDH5',
-                          'username': 'cmadmin', 'password': 'cmpassword', 'cm_server': None,
-                          'host_names': None, 'license_file': None, 'parcel': [], 'vmsize': None, 'do_post': True}
-
-    def cmx_args(option, opt_str, value, *args, **kwargs):
-        if option.dest == 'host_names':
-            print "switch %s value check: %s" % (opt_str, value)
-            for host in value.split(','):
-                if not hostname_resolves(host):
-                    exit(1)
-            else:
-                cmx_config_options[option.dest] = [
-                    socket.gethostbyname(x) for x in value.split(',')]
-        elif option.dest == 'cm_server':
-            print "switch %s value check: %s" % (opt_str, value)
-
-            cmx_config_options[option.dest] = socket.gethostbyname(value) if \
-                hostname_resolves(value) else exit(1)
-            retry_count = 5
-            while retry_count > 0:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if not s.connect_ex((socket.gethostbyname(value), 7180)) == 0:
-                    print "Cloudera Manager Server is not started on %s " % value
-                    s.close()
-                    sleep(60)
-                else:
-                    break
-                retry_count -= 1
-            if retry_count == 0:
-                print "Couldn't connect to Cloudera Manager after 5 minutes, exiting"
-                exit(1)
-        elif option.dest == 'ssh_private_key':
-            with open(value, 'r') as f:
-                license_contents = f.read()
-            cmx_config_options[option.dest] = license_contents
-        else:
-            cmx_config_options[option.dest] = value
-
-    def hostname_resolves(hostname):
-        """
-        Check if hostname resolves
-        :param hostname:
-        :return:
-        """
-        try:
-            if socket.gethostbyname(hostname) == '0.0.0.0':
-                print "Error [{'host': '%s', 'fqdn': '%s'}]" % \
-                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
-                return False
-            else:
-                print "Success [{'host': '%s', 'fqdn': '%s'}]" % \
-                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
-                return True
-        except socket.error:
-            print "Error 'host': '%s'" % hostname
-            return False
-
-    def manifest_to_dict(manifest_json):
-        if manifest_json:
-            dir_list = json.load(
-                urllib2.urlopen(manifest_json))['parcels'][0]['parcelName']
-            parcel_part = re.match(r"^(.*?)-(.*)-(.*?)$", dir_list).groups()
-            return {'product': str(parcel_part[0]).upper(), 'version': str(parcel_part[1]).lower()}
-        else:
-            raise Exception("Invalid manifest.json")
-
-    parser = OptionParser()
-    parser.add_option('-m', '--cm-server', dest='cm_server', type="string", action='callback', callback=cmx_args,
-                      help='*Set Cloudera Manager Server Host. '
-                           'Note: This is the host where the Cloudera Management Services get installed.')
-    parser.add_option('-w', '--host-names', dest='host_names', type="string", action='callback',
-                      callback=cmx_args,
-                      help='*Set target node(s) list, separate with comma eg: -w host1,host2,...,host(n). '
-                           'Note:'
-                           ' - enclose in double quote, also avoid leaving spaces between commas.'
-                           ' - CM_SERVER excluded in this list, if you want install CDH Services in CM_SERVER'
-                           ' add the host to this list.')
-    parser.add_option('-n', '--cluster-name', dest='cluster_name', type="string", action='callback',
-                      callback=cmx_args, default='Cluster 1',
-                      help='Set Cloudera Manager Cluster name enclosed in double quotes. Default "Cluster 1"')
-    parser.add_option('-u', '--ssh-root-user', dest='ssh_root_user', type="string", action='callback',
-                      callback=cmx_args, default='root', help='Set target node(s) ssh username. Default root')
-    parser.add_option('-p', '--ssh-root-password', dest='ssh_root_password', type="string", action='callback',
-                      callback=cmx_args, help='*Set target node(s) ssh password..')
-    parser.add_option('-k', '--ssh-private-key', dest='ssh_private_key', type="string", action='callback',
-                      callback=cmx_args, help='The private key to authenticate with the hosts. '
-                                              'Specify either this or a password.')
-    parser.add_option('-l', '--license-file', dest='license_file', type="string", action='callback',
-                      callback=cmx_args, help='Cloudera Manager License file name')
-    parser.add_option('-d', '--teardown', dest='teardown', action="store", type="string",
-                      help='Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".')
-    parser.add_option('-a', '--highavailable', dest='highAvailability', action="store_true", default=False,
-                      help='Create a High Availability cluster')
-    parser.add_option('-c', '--cm-user', dest='username', type="string", action='callback',
-                      callback=cmx_args, help='Set Cloudera Manager Username')
-    parser.add_option('-s', '--cm-password', dest='password', type="string", action='callback',
-                      callback=cmx_args, help='Set Cloudera Manager Password')
-    parser.add_option('-e', '--accept-eula', dest='accepted', action="store_true", default=False,
-                      help='Must accept eula before install')
-    parser.add_option('-v', '--vmsize', dest='vmsize', type="string", action="callback",
-                      callback=cmx_args, help='provide vmsize for setup')
-
-    (options, args) = parser.parse_args()
-
-    # Install CDH5 latest version
-    # Modify this for custom cloudera install
-    cmx_config_options['parcel'].append(manifest_to_dict(
-        'http://archive.cloudera.com/cdh5/parcels/5.15.1/manifest.json'))
-
-    msg_req_args = "Please specify the required arguments: "
-    if cmx_config_options['cm_server'] is None:
-        parser.error(msg_req_args + "-m/--cm-server")
-    else:
-        if not (cmx_config_options['ssh_private_key'] or cmx_config_options['ssh_root_password']):
-            parser.error(msg_req_args +
-                         "-p/--ssh-root-password or -k/--ssh-private-key")
-        elif cmx_config_options['host_names'] is None:
-            parser.error(msg_req_args + "-w/--host-names")
-        elif cmx_config_options['ssh_private_key'] and cmx_config_options['ssh_root_password']:
-            parser.error(msg_req_args +
-                         "-p/--ssh-root-password _OR_ -k/--ssh-private-key")
-
-    # Management services password. They are required when adding Management services
-    management = ManagementActions
-    if not (bool(management.get_mgmt_password("ACTIVITYMONITOR"))
-            and bool(management.get_mgmt_password("REPORTSMANAGER"))):
-        exit(1)
-    else:
-        cmx_config_options['amon_password'] = management.get_mgmt_password(
-            "ACTIVITYMONITOR")
-        cmx_config_options['rman_password'] = management.get_mgmt_password(
-            "REPORTSMANAGER")
-        cmx_config_options['oozie_password'] = management.get_mgmt_password(
-            "OOZIE")
-        cmx_config_options['hive_password'] = management.get_mgmt_password(
-            "HIVEMETASTORESERVER")
-
-    cmx = type('', (), cmx_config_options)
-    check = ActiveCommands()
-    cdh = ServiceActions
-    if cmx_config_options['cm_server'] and options.teardown:
-        if options.teardown.lower() in ['remove_cluster', 'keep_cluster']:
-            teardown(keep_cluster=(options.teardown.lower() == 'keep_cluster'))
-            print "Bye!"
-            exit(0)
-        else:
-            print 'Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".'
-            exit(1)
-
-    # Uncomment here to see cmx configuration options
-    # print cmx_config_options
-    return options
-
-
 def log(msg):
-    print time.strftime("%X") + ": " + msg
-
-
-def postEulaInfo():
-    url = 'https://s1465054361.t.eloqua.com/e/f2'
-    data = urllib.urlencode({'elqFormName': 'Cloudera_Azure_EULA',
-                             'elqSiteID': '1465054361',
-                             'cid': '70134000001PsLS',
-                             'firstName': 'Big',
-                             'lastName': 'Data',
-                             'company': 'Foo',
-                             'emailAddress': 'foo@bar.com',
-                             'jobRole': 'Things',
-                             'jobFunction': 'Things',
-                             'businessPhone': '8675309'
-                             })
-    results = urllib2.urlopen(url, data)
-    with open('results.html', 'w') as f:
-        log(results.read())
-
+    pass
 
 def main():
-    log("parse_options")
     options = parse_options()
-
-    global diskcount
-    diskcount = 5
-    log("data_disk_count" + `diskcount`)
-
-    if(cmx.do_post):
-        postEulaInfo()
-
-    log("init_cluster")
     init_cluster()
 
-    log("add_hosts_to_cluster")
+    '''
     add_hosts_to_cluster()
-
-    # Un-comment the following two entries to enable rack topology for AD spanning.
-    # log("host_rack")
-    # host_rack()
-
-    log("deploy_parcel")
-    deploy_parcel(parcel_product=cmx.parcel[0]['product'],
-                  parcel_version=cmx.parcel[0]['version'])
+    deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
 
     log("setup_management")
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
@@ -1997,42 +1707,8 @@ def main():
     setup_oozie()
     setup_hue()
 
-    # setup_mapreduce(options.highAvailability)
-
-    # Note: setup_easy() is alternative to Step-Through above
-    # This this provides an example of alternative method of
-    # using CM API to setup CDH services.
-    # setup_easy()
-
-    # Example setting hdfs-HA and yarn-HA
-    # You can uncomment below after you've setup the CDH services.
-    # setup_hdfs_ha()
-    # setup_yarn_ha()
-
-    # if options.highAvailability:
-    #    setup_hdfs_ha()
-    #    setup_yarn_ha()
-
-    # Deploy GPL Extra Parcel
-    # deploy_parcel(parcel_product=cmx.parcel[1]['product'],parcel_version=cmx.parcel[1]['version'])
-
-    # Restart Cluster and Deploy Cluster wide client config
-    log("restart_cluster")
     cdh.restart_cluster()
-
-    # Other examples of CM API
-    # eg: "STOP" Services or "START"
-    # cdh('HBASE', 'IMPALA', 'SPARK', 'SOLR', 'FLUME').stop()
-
-    # Example restarting Management Service
-    # management_role.restart_management()
-    # or Restart individual Management Roles
     management(*mgmt_roles).restart()
-    # Stop REPORTSMANAGER Management Role
-    # management("REPORTSMANAGER").stop()
-
-    # Example setup Kerberos, Sentry
-    # setup_kerberos()
-    # setup_sentry()
+    '''
 
 main()
