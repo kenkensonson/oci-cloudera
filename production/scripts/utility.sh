@@ -53,7 +53,9 @@ vm_size=$(curl http://169.254.169.254/opc/v1/instance/shape)
 disk_count=5
 
 python utility.py \
-  --ssh-private-key ${ssh_private_key} \
-  --host-names ${host_names} \
+  --host_names ${host_names} \
+  --ssh_private_key ${ssh_private_key} \
+  --username admin \
+  --password admin \
   --vm_size ${vm_size} \
   --disk_count ${disk_count}

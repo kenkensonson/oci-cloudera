@@ -28,7 +28,7 @@ def setupArguments():
     parser.add_argument('--cm_server', type=str, default='localhost')
     return parser
 
-def
+def foo():
     global cmx
     global check, cdh, management
 
