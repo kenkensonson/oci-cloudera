@@ -17,7 +17,7 @@ def setupArguments():
     parser = argparse.ArgumentParser(description='Setup a Cloudera Cluster', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group('Required named arguments')
     required.add_argument('--host_names', required=True, type=str, help='Node list, separate with commas: host1,host2,...,host(n)')
-    required.add_argument('--ssh_private_key', required=True, type=str, help='The private key to authenticate with the hosts')
+    required.add_argument('--ssh_private_key_filename', required=True, type=str, help='The private key to authenticate with the hosts')
     required.add_argument('--vm_size', required=True, type=str, help='VM Size for CPU and Memory Setup')
     required.add_argument('--disk_count', required=True, type=int, help='Number of Data Disks on Each Node')
     parser.add_argument('--cluster_name', type=str, default='cluster')
@@ -41,7 +41,7 @@ def add_hosts_to_cluster(api, options):
     print "> Add hosts to Cluster: %s" % options.cluster_name
     cluster = api.get_cluster(options.cluster_name)
     cm = api.get_cloudera_manager()
-    cmd = cm.host_install(user_name=options.ssh_root_user, host_names=options.host_names, private_key=options.ssh_private_key)
+    cmd = cm.host_install(user_name=options.ssh_root_user, host_names=options.host_names, private_key=options.ssh_private_key_filename)
 
     print "Installing agents - [ http://localhost:7180/cmf/command/%s/details ]" % (cmd.id)
     while cmd.success == None:
@@ -96,7 +96,7 @@ def foo():
             if retry_count == 0:
                 print "Couldn't connect to Cloudera Manager after 5 minutes, exiting"
                 exit(1)
-        elif option.dest == 'ssh_private_key':
+        elif option.dest == 'ssh_private_key_filename':
             with open(value, 'r') as f:
                 license_contents = f.read()
             cmx_config_options[option.dest] = license_contents
@@ -132,12 +132,12 @@ def foo():
     if cmx_config_options['cm_server'] is None:
         parser.error(msg_req_args + "-m/--cm-server")
     else:
-        if not (cmx_config_options['ssh_private_key'] or cmx_config_options['ssh_root_password']):
+        if not (cmx_config_options['ssh_private_key_filename'] or cmx_config_options['ssh_root_password']):
             parser.error(msg_req_args +
                          "-p/--ssh-root-password or -k/--ssh-private-key")
         elif cmx_config_options['host_names'] is None:
             parser.error(msg_req_args + "-w/--host-names")
-        elif cmx_config_options['ssh_private_key'] and cmx_config_options['ssh_root_password']:
+        elif cmx_config_options['ssh_private_key_filename'] and cmx_config_options['ssh_root_password']:
             parser.error(msg_req_args +
                          "-p/--ssh-root-password _OR_ -k/--ssh-private-key")
 
