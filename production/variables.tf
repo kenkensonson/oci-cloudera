@@ -61,7 +61,7 @@ variable "worker" {
     shape = "VM.Standard2.24"
     node_count = 3
     size_in_gbs = 1024
-    disk_count = 2
+    disk_count = 0
   }
 }
 
