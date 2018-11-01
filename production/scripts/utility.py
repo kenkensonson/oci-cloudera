@@ -36,38 +36,28 @@ def init_cluster(api, options):
 
 def add_hosts_to_cluster(api, options):
     print "> Add hosts to Cluster: %s" % options.cluster_name
-    host_list = list(set([socket.getfqdn(x) for x in options.host_names] + [socket.getfqdn("localhost")]) - set([x.hostname for x in api.get_all_hosts()]))
-    if host_list:
-        cm = api.get_cloudera_manager()
-        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=options.ssh_private_key)
-        print "Installing agents - [ http://localhost:7180/cmf/command/%s/details ]" % (cmd.id)
-        while cmd.success == None:
-            sleep(20)
-            cmd = cmd.fetch()
-            print "Installing hosts..."
+    cluster = api.get_cluster(options.cluster_name)
+    cm = api.get_cloudera_manager()
+    cmd = cm.host_install(user_name=options.ssh_root_user, host_names=options.host_names, private_key=options.ssh_private_key)
 
-        if cmd.success != True:
-            print "cm_host_install failed: " + cmd.resultMessage
-            exit(1)
+    print "Installing agents - [ http://localhost:7180/cmf/command/%s/details ]" % (cmd.id)
+    while cmd.success == None:
+        sleep(20)
+        cmd = cmd.fetch()
+        print "Waiting for install agents to finish..."
 
-    print "Agents installed!"
+    if cmd.success != True:
+        print "cm.host_install failed: " + cmd.resultMessage
+        exit(1)
+
     hosts = []
     for host in api.get_all_hosts():
-        if host.hostId not in [x.hostId for x in cluster.list_hosts()]:
-            print "Adding {'ip': '%s', 'hostname': '%s', 'hostId': '%s'}" % (host.ipAddress, host.hostname, host.hostId)
-            hosts.append(host.hostId)
+        print "Adding {'ip': '%s', 'hostname': '%s', 'hostId': '%s'}" % (host.ipAddress, host.hostname, host.hostId)
+        hosts.append(host.hostId)
 
-    print "Adding new hosts to cluster..."
-    if hosts:
-        print "Adding hostId(s) to '%s'" % options.cluster_name
-        print "%s" % hosts
-        cluster.add_hosts(hosts)
-
-
-
-
-
-
+    print "Adding hosts to cluster..."
+    print hosts
+    cluster.add_hosts(hosts)
 
 
 
@@ -1503,13 +1493,13 @@ class ActiveCommands:
 def main():
     parser=setupArguments()
     options=parser.parse_args()
-    options.host_list=options.host_list.split(",")
+    options.host_names=options.host_names.split(",")
     print(options)
 
     api = ApiResource(server_host="localhost", username="admin", password="admin")
 
-    #init_cluster(api, options)
-    #add_hosts_to_cluster(api, options)
+    init_cluster(api, options)
+    add_hosts_to_cluster(api, options)
 
     '''
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
