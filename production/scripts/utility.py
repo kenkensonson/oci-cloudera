@@ -43,7 +43,7 @@ def wait_for_cm_to_start():
 def init_cluster(api, options):
     print "> Initialize Cluster"
     cm = api.get_cloudera_manager()
-    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
+    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "https://archive.cloudera.com/cdh6/6.0.1/parcels", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
 
     if options.cluster_name in [x.name for x in api.get_all_clusters()]:
         print "Cluster name: '%s' already exists" % options.cluster_name
