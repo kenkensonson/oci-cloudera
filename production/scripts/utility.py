@@ -1198,17 +1198,9 @@ def teardown(keep_cluster=True):
 
 
 class ManagementActions:
-    """
-    Example stopping 'ACTIVITYMONITOR', 'REPORTSMANAGER' Management Role
-    :param role_list:
-    :param action:
-    :return:
-    """
-
     def __init__(self, *role_list):
         self._role_list = role_list
-        self._api = ApiResource(server_host=cmx.cm_server,
-                                username=cmx.username, password=cmx.password)
+        self._api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         self._cm = self._api.get_cloudera_manager()
         try:
             self._service = self._cm.get_service()
@@ -1226,21 +1218,13 @@ class ManagementActions:
         self._action('restart_roles')
 
     def _action(self, action):
-        state = {'start_roles': ['STOPPED'], 'stop_roles': [
-            'STARTED'], 'restart_roles': ['STARTED', 'STOPPED']}
+        state = {'start_roles': ['STOPPED'], 'stop_roles': ['STARTED'], 'restart_roles': ['STARTED', 'STOPPED']}
         for mgmt_role in [x for x in self._role_list if x in self._role_types]:
             for role in [x for x in self._service.get_roles_by_type(mgmt_role) if x.roleState in state[action]]:
                 for cmd in getattr(self._service, action)(role.name):
-                    check.status_for_command("%s role %s" % (
-                        action.split("_")[0].upper(), mgmt_role), cmd)
+                    check.status_for_command("%s role %s" % (action.split("_")[0].upper(), mgmt_role), cmd)
 
     def setup(self):
-        """
-        Setup Management Roles
-        'ACTIVITYMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR', 'SERVICEMONITOR'
-        Requires License: 'NAVIGATOR', 'NAVIGATORMETASERVER', 'REPORTSMANAGER"
-        :return:
-        """
         # api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         print "> Setup Management Services"
         self._cm.update_config({"TSQUERY_STREAMS_LIMIT": 1000})
@@ -1248,8 +1232,7 @@ class ManagementActions:
         # pick hostId that match the ipAddress of cm_server
         # mgmt_host may be empty then use the 1st host from the -w
         try:
-            mgmt_host = [x for x in hosts if x.ipAddress
-                         == socket.gethostbyname(cmx.cm_server)][0]
+            mgmt_host = [x for x in hosts if x.ipAddress == socket.gethostbyname(cmx.cm_server)][0]
         except IndexError:
             mgmt_host = [x for x in hosts if x.id == 0][0]
 
@@ -1259,8 +1242,7 @@ class ManagementActions:
                     print "Creating Management Role %s " % role_type
                     role_name = "mgmt-%s-%s" % (role_type, mgmt_host.md5host)
                     for cmd in self._service.create_role(role_name, role_type, mgmt_host.hostId).get_commands():
-                        check.status_for_command(
-                            "Creating %s" % role_name, cmd)
+                        check.status_for_command("Creating %s" % role_name, cmd)
             except ApiException as err:
                 print "ERROR: %s " % err.message
 
@@ -1275,18 +1257,13 @@ class ManagementActions:
                                      "mgmt_log_dir": LOG_DIR + "/cloudera-scm-firehose",
                                      "firehose_heapsize": "215964392"})
             elif group.roleType == "ALERTPUBLISHER":
-                group.update_config(
-                    {"mgmt_log_dir": LOG_DIR + "/cloudera-scm-alertpublisher"})
+                group.update_config({"mgmt_log_dir": LOG_DIR + "/cloudera-scm-alertpublisher"})
             elif group.roleType == "EVENTSERVER":
-                group.update_config({"event_server_heapsize": "215964392",
-                                     "mgmt_log_dir": LOG_DIR + "/cloudera-scm-eventserver",
-                                     "eventserver_index_dir": LOG_DIR + "/lib/cloudera-scm-eventserver"})
+                group.update_config({"event_server_heapsize": "215964392", "mgmt_log_dir": LOG_DIR + "/cloudera-scm-eventserver", "eventserver_index_dir": LOG_DIR + "/lib/cloudera-scm-eventserver"})
             elif group.roleType == "HOSTMONITOR":
-                group.update_config({"mgmt_log_dir": LOG_DIR + "/cloudera-scm-firehose",
-                                     "firehose_storage_dir": LOG_DIR + "/lib/cloudera-host-monitor"})
+                group.update_config({"mgmt_log_dir": LOG_DIR + "/cloudera-scm-firehose", "firehose_storage_dir": LOG_DIR + "/lib/cloudera-host-monitor"})
             elif group.roleType == "SERVICEMONITOR":
-                group.update_config({"mgmt_log_dir": LOG_DIR + "/cloudera-scm-firehose",
-                                     "firehose_storage_dir": LOG_DIR + "/lib/cloudera-service-monitor"})
+                group.update_config({"mgmt_log_dir": LOG_DIR + "/cloudera-scm-firehose", "firehose_storage_dir": LOG_DIR + "/lib/cloudera-service-monitor"})
             elif group.roleType == "NAVIGATOR" and management.licensed():
                 group.update_config({})
             elif group.roleType == "NAVIGATORMETADATASERVER" and management.licensed():
@@ -1309,12 +1286,7 @@ class ManagementActions:
 
     @classmethod
     def licensed(cls):
-        """
-        Check if Cluster is licensed
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         cm = api.get_cloudera_manager()
         try:
             return bool(cm.get_license().uuid)
@@ -1323,12 +1295,7 @@ class ManagementActions:
 
     @classmethod
     def upload_license(cls):
-        """
-        Upload License file
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         cm = api.get_cloudera_manager()
         if cmx.license_file and not management.licensed():
             print "Upload license"
@@ -1342,12 +1309,7 @@ class ManagementActions:
 
     @classmethod
     def begin_trial(cls):
-        """
-        Begin Trial
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         print "def begin_trial"
         if not management.licensed():
             try:
@@ -1360,11 +1322,6 @@ class ManagementActions:
 
     @classmethod
     def get_mgmt_password(cls, role_type):
-        """
-        Get password for "ACTIVITYMONITOR', 'REPORTSMANAGER', 'NAVIGATOR", "OOZIE", "HIVEMETASTORESERVER"
-        :param role_type:
-        :return:
-        """
         contents = []
         mgmt_password = False
 
@@ -1388,9 +1345,6 @@ class ManagementActions:
 
     @classmethod
     def get_cmhost(cls):
-        """
-        return cm host in the same format as other host
-        """
         api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         idx = len(set(enumerate(cmx.host_names)))
         _host = [x for x in api.get_all_hosts() if x.ipAddress == socket.gethostbyname(cmx.cm_server)][0]
@@ -1406,27 +1360,14 @@ class ManagementActions:
 
     @classmethod
     def get_hosts(cls, include_cm_host=False):
-        """
-        because api.get_all_hosts() returns all the hosts as instanceof ApiHost: hostId hostname ipAddress
-        and cluster.list_hosts() returns all the cluster hosts as instanceof ApiHostRef: hostId
-        we only need Cluster hosts with instanceof ApiHost: hostId hostname ipAddress + md5host
-        preserve host order in -w
-        hashlib.md5(host.hostname).hexdigest()
-        attributes = {'id': None, 'hostId': None, 'hostname': None, 'md5host': None, 'ipAddress': None, }
-        return a list of hosts
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
-
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         w_hosts = set(enumerate(cmx.host_names))
-        if include_cm_host and socket.gethostbyname(cmx.cm_server) \
-                not in [socket.gethostbyname(x) for x in cmx.host_names]:
+        if include_cm_host and socket.gethostbyname(cmx.cm_server) not in [socket.gethostbyname(x) for x in cmx.host_names]:
             w_hosts.add((len(w_hosts), cmx.cm_server))
 
         hosts = []
         for idx, host in w_hosts:
-            _host = [x for x in api.get_all_hosts() if x.ipAddress
-                     == socket.gethostbyname(host)][0]
+            _host = [x for x in api.get_all_hosts() if x.ipAddress == socket.gethostbyname(host)][0]
             hosts.append({
                 'id': idx,
                 'hostId': _host.hostId,
@@ -1439,26 +1380,13 @@ class ManagementActions:
 
     @classmethod
     def restart_management(cls):
-        """
-        Restart Management Services
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         mgmt = api.get_cloudera_manager().get_service()
-
         check.status_for_command("Stop Management services", mgmt.stop())
         check.status_for_command("Start Management services", mgmt.start())
 
 
 class ServiceActions:
-    """
-    Example stopping/starting services ['HBASE', 'IMPALA', 'SPARK', 'SOLR']
-    :param service_list:
-    :param action:
-    :return:
-    """
-
     def __init__(self, *service_list):
         self._service_list = service_list
         self._api = ApiResource(server_host=cmx.cm_server,
@@ -1477,24 +1405,15 @@ class ServiceActions:
     def _action(self, action):
         state = {'start': ['STOPPED'], 'stop': [
             'STARTED'], 'restart': ['STARTED', 'STOPPED']}
-        for services in [x for x in self._cluster.get_all_services()
-                         if x.type in self._service_list and x.serviceState in state[action]]:
-            check.status_for_command("%s service %s" % (action.upper(), services.type),
-                                     getattr(self._cluster.get_service(services.name), action)())
+        for services in [x for x in self._cluster.get_all_services() if x.type in self._service_list and x.serviceState in state[action]]:
+            check.status_for_command("%s service %s" % (action.upper(), services.type), getattr(self._cluster.get_service(services.name), action)())
 
     @classmethod
     def get_service_type(cls, name):
-        """
-        Returns service based on service type name
-        :param name:
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         cluster = api.get_cluster(cmx.cluster_name)
         try:
-            service = [x for x in cluster.get_all_services()
-                       if x.type == name][0]
+            service = [x for x in cluster.get_all_services() if x.type == name][0]
         except IndexError:
             service = None
 
@@ -1502,73 +1421,36 @@ class ServiceActions:
 
     @classmethod
     def deploy_client_config_for(cls, obj):
-        """
-        Example deploying GATEWAY Client Config on each host
-        Note: only recommended if you need to deploy on a specific hostId.
-        Use the cluster.deploy_client_config() for normal use.
-        example usage:
-        # hostId
-        for host in get_cluster_hosts(include_cm_host=True):
-            deploy_client_config_for(host.hostId)
-        # cdh service
-        for service in cluster.get_all_services():
-            deploy_client_config_for(service)
-        :param host.hostId, or ApiService:
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
-        # cluster = api.get_cluster(cmx.cluster_name)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         if isinstance(obj, str) or isinstance(obj, unicode):
             for role_name in [x.roleName for x in api.get_host(obj).roleRefs if 'GATEWAY' in x.roleName]:
                 service = cdh.get_service_type('GATEWAY')
-                print "Deploying client config for service: %s - host: [%s]" % \
-                      (service.type, api.get_host(obj).hostname)
-                check.status_for_command("Deploy client config for role %s" %
-                                         role_name, service.deploy_client_config(role_name))
+                print "Deploying client config for service: %s - host: [%s]" % (service.type, api.get_host(obj).hostname)
+                check.status_for_command("Deploy client config for role %s" % role_name, service.deploy_client_config(role_name))
         elif isinstance(obj, ApiService):
             for role in obj.get_roles_by_type("GATEWAY"):
-                check.status_for_command("Deploy client config for role %s" %
-                                         role.name, obj.deploy_client_config(role.name))
+                check.status_for_command("Deploy client config for role %s" % role.name, obj.deploy_client_config(role.name))
 
     @classmethod
     def create_service_role(cls, service, role_type, host):
-        """
-        Helper function to create a role
-        :return:
-        """
-        service_name = service.name[:4] + hashlib.md5(service.name).hexdigest()[:8] \
-            if len(role_type) > 24 else service.name
-
+        service_name = service.name[:4] + hashlib.md5(service.name).hexdigest()[:8] if len(role_type) > 24 else service.name
         role_name = "-".join([service_name, role_type, host.md5host])[:64]
         print "Creating role: %s on host: [%s]" % (role_name, host.hostname)
         for cmd in service.create_role(role_name, role_type, host.hostId).get_commands():
-            check.status_for_command(
-                "Creating role: %s on host: [%s]" % (role_name, host.hostname), cmd)
+            check.status_for_command("Creating role: %s on host: [%s]" % (role_name, host.hostname), cmd)
 
     @classmethod
     def restart_cluster(cls):
-        """
-        Restart Cluster and Cluster wide deploy client config
-        :return:
-        """
-        api = ApiResource(server_host=cmx.cm_server,
-                          username=cmx.username, password=cmx.password)
+        api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
         cluster = api.get_cluster(cmx.cluster_name)
         print "Restart cluster: %s" % cmx.cluster_name
         check.status_for_command("Stop %s" % cmx.cluster_name, cluster.stop())
-        check.status_for_command("Start %s" %
-                                 cmx.cluster_name, cluster.start())
+        check.status_for_command("Start %s" % cmx.cluster_name, cluster.start())
         # Example deploying cluster wide Client Config
-        check.status_for_command("Deploy client config for %s" %
-                                 cmx.cluster_name, cluster.deploy_client_config())
+        check.status_for_command("Deploy client config for %s" % cmx.cluster_name, cluster.deploy_client_config())
 
     @classmethod
     def dependencies_for(cls, service):
-        """
-        Utility function returns dict of service dependencies
-        :return:
-        """
         service_config = {}
         config_types = {"hue_webhdfs": ['NAMENODE', 'HTTPFS'], "hdfs_service": "HDFS", "sentry_service": "SENTRY",
                         "zookeeper_service": "ZOOKEEPER", "hbase_service": "HBASE", "solr_service": "SOLR",
@@ -1584,31 +1466,22 @@ class ServiceActions:
 
         # Extended dependence list, adding the optional ones as well
         if service.type == 'HUE':
-            dependency_list.extend(['sqoop_service',
-                                    'impala_service'])
+            dependency_list.extend(['sqoop_service', 'impala_service'])
         if service.type in ['HIVE', 'HDFS', 'HUE', 'HBASE', 'OOZIE', 'MAPREDUCE', 'YARN']:
             dependency_list.append('zookeeper_service')
-#        if service.type in ['HIVE']:
-#            dependency_list.append('sentry_service')
         if service.type == 'OOZIE':
             dependency_list.append('hive_service')
-#        if service.type in ['FLUME', 'IMPALA']:
-#            dependency_list.append('hbase_service')
         if service.type in ['FLUME', 'SPARK', 'SENTRY']:
             dependency_list.append('hdfs_service')
-#        if service.type == 'FLUME':
-#            dependency_list.append('solr_service')
 
         for key in dependency_list:
             if key == "hue_webhdfs":
                 hdfs = cdh.get_service_type('HDFS')
                 if hdfs is not None:
-                    service_config[key] = [
-                        x.name for x in hdfs.get_roles_by_type('NAMENODE')][0]
+                    service_config[key] = [x.name for x in hdfs.get_roles_by_type('NAMENODE')][0]
                     # prefer HTTPS over NAMENODE
                     if [x.name for x in hdfs.get_roles_by_type('HTTPFS')]:
-                        service_config[key] = [
-                            x.name for x in hdfs.get_roles_by_type('HTTPFS')][0]
+                        service_config[key] = [x.name for x in hdfs.get_roles_by_type('HTTPFS')][0]
             elif key == "mapreduce_yarn_service":
                 for _type in config_types[key]:
                     if cdh.get_service_type(_type) is not None:
@@ -1619,63 +1492,41 @@ class ServiceActions:
             elif key == "hue_hbase_thrift":
                 hbase = cdh.get_service_type('HBASE')
                 if hbase is not None:
-                    service_config[key] = [
-                        x.name for x in hbase.get_roles_by_type(config_types[key])][0]
+                    service_config[key] = [x.name for x in hbase.get_roles_by_type(config_types[key])][0]
             else:
                 if cdh.get_service_type(config_types[key]) is not None:
-                    service_config[key] = cdh.get_service_type(
-                        config_types[key]).name
+                    service_config[key] = cdh.get_service_type(config_types[key]).name
 
         return service_config
 
 
 class ActiveCommands:
     def __init__(self):
-        self._api = ApiResource(server_host=cmx.cm_server,
-                                username=cmx.username, password=cmx.password)
+        self._api = ApiResource(server_host=cmx.cm_server, username=cmx.username, password=cmx.password)
 
     def status_for_command(self, message, command):
-        """
-        Helper to check active command status
-        :param message:
-        :param command:
-        :return:
-        """
         _state = 0
         _bar = ['[|]', '[/]', '[-]', '[\\]']
         while True:
             if self._api.get("/commands/%s" % command.id)['active']:
-                sys.stdout.write(
-                    _bar[_state] + ' ' + message + ' ' + ('\b' * (len(message) + 5)))
+                sys.stdout.write(_bar[_state] + ' ' + message + ' ' + ('\b' * (len(message) + 5)))
                 sys.stdout.flush()
                 _state += 1
                 if _state > 3:
                     _state = 0
                 time.sleep(2)
             else:
-                print "\n [%s] %s" % (command.id, self._api.get(
-                    "/commands/%s" % command.id)['resultMessage'])
-                self._child_cmd(self._api.get("/commands/%s" %
-                                              command.id)['children']['items'])
+                print "\n [%s] %s" % (command.id, self._api.get("/commands/%s" % command.id)['resultMessage'])
+                self._child_cmd(self._api.get("/commands/%s" % command.id)['children']['items'])
                 break
 
     def _child_cmd(self, cmd):
-        """
-        Helper cmd has child objects
-        :param cmd:
-        :return:
-        """
         if len(cmd) != 0:
             print " Sub tasks result(s):"
             for resMsg in cmd:
                 if resMsg.get('resultMessage'):
-                    print "  [%s] %s" % (resMsg['id'], resMsg['resultMessage']) if not resMsg.get('roleRef') \
-                        else "  [%s] %s - %s" % (resMsg['id'], resMsg['resultMessage'], resMsg['roleRef']['roleName'])
-                self._child_cmd(self._api.get("/commands/%s" %
-                                              resMsg['id'])['children']['items'])
-
-def log(msg):
-    pass
+                    print "  [%s] %s" % (resMsg['id'], resMsg['resultMessage']) if not resMsg.get('roleRef') else "  [%s] %s - %s" % (resMsg['id'], resMsg['resultMessage'], resMsg['roleRef']['roleName'])
+                self._child_cmd(self._api.get("/commands/%s" % resMsg['id'])['children']['items'])
 
 def main():
     options = parse_options()
@@ -1685,7 +1536,6 @@ def main():
     add_hosts_to_cluster()
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
 
-    log("setup_management")
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
     if management.licensed():
         mgmt_roles.append('REPORTSMANAGER')
@@ -1697,7 +1547,6 @@ def main():
     else:
         management.begin_trial()
 
-    log("setup_components")
     setup_zookeeper(options.highAvailability)
     setup_hdfs(options.highAvailability)
     setup_yarn(options.highAvailability)
