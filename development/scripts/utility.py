@@ -1410,7 +1410,7 @@ def main():
     print(options)
 
     wait_for_cm_to_start()
-    
+
     api = ApiResource(server_host="localhost", username="admin", password="admin")
     api.get_cloudera_manager().update_config({'REMOTE_PARCEL_REPO_URLS': 'https://archive.cloudera.com/cdh6/6.0.1/parcels/'})
 
@@ -1418,9 +1418,7 @@ def main():
 
     managementActions = ManagementActions
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
-    managementActions(*mgmt_roles).setup()
     managementActions(*mgmt_roles).start()
-    managementActions.begin_trial()
 
     add_hosts_to_cluster(api, options)
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
