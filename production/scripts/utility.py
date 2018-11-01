@@ -16,7 +16,6 @@ from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 def setupArguments():
     parser = argparse.ArgumentParser(description='Setup a Cloudera Cluster', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group('Required named arguments')
-
     required.add_argument('--host_names', required=True, type=str, help='Node list, separate with commas: host1,host2,...,host(n)')
     required.add_argument('--ssh_private_key', required=True, type=str, help='The private key to authenticate with the hosts')
     required.add_argument('--vm_size', required=True, type=str, help='VM Size for CPU and Memory Setup')
@@ -25,6 +24,54 @@ def setupArguments():
     parser.add_argument('--ssh_root_user', type=str, default='opc')
     parser.add_argument('--cm_server', type=str, default='localhost')
     return parser
+
+def init_cluster(api, options):
+    print "> Initialize Cluster"
+    cm = api.get_cloudera_manager()
+    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
+
+    print "Creating cluster name '%s'" % options.cluster_name
+    api.create_cluster(name=options.cluster_name, version="CDH6")
+
+
+def add_hosts_to_cluster(api, options):
+    print "> Add hosts to Cluster: %s" % options.cluster_name
+    host_list = list(set([socket.getfqdn(x) for x in options.host_names] + [socket.getfqdn("localhost")]) - set([x.hostname for x in api.get_all_hosts()]))
+    if host_list:
+        cm = api.get_cloudera_manager()
+        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=options.ssh_private_key)
+        print "Installing agents - [ http://localhost:7180/cmf/command/%s/details ]" % (cmd.id)
+        while cmd.success == None:
+            sleep(20)
+            cmd = cmd.fetch()
+            print "Installing hosts..."
+
+        if cmd.success != True:
+            print "cm_host_install failed: " + cmd.resultMessage
+            exit(1)
+
+    print "Agents installed!"
+    hosts = []
+    for host in api.get_all_hosts():
+        if host.hostId not in [x.hostId for x in cluster.list_hosts()]:
+            print "Adding {'ip': '%s', 'hostname': '%s', 'hostId': '%s'}" % (host.ipAddress, host.hostname, host.hostId)
+            hosts.append(host.hostId)
+
+    print "Adding new hosts to cluster..."
+    if hosts:
+        print "Adding hostId(s) to '%s'" % options.cluster_name
+        print "%s" % hosts
+        cluster.add_hosts(hosts)
+
+
+
+
+
+
+
+
+
+
 
 def foo():
     global cmx
@@ -197,47 +244,6 @@ def getParameterValue(vmsize, parameter):
         "VM.Standard1.8:dfs_replication": "1",
     }
     return switcher.get(vmsize + ":" + parameter)
-
-def init_cluster(api, options):
-    print "> Initialise Cluster"
-    cm = api.get_cloudera_manager()
-    cm.update_config({"REMOTE_PARCEL_REPO_URLS": "http://archive.cloudera.com/cdh6/parcels/{latest_supported}", "PHONE_HOME": True, "PARCEL_DISTRIBUTE_RATE_LIMIT_KBS_PER_SECOND": "1024000"})
-
-    if options.cluster_name in [x.name for x in api.get_all_clusters()]:
-        print "Cluster name: '%s' already exists" % options.cluster_name
-    else:
-        print "Creating cluster name '%s'" % options.cluster_name
-        api.create_cluster(name=options.cluster_name, version="CDH6")
-
-
-def add_hosts_to_cluster(api, options):
-    print "> Add hosts to Cluster: %s" % options.cluster_name
-    host_list = list(set([socket.getfqdn(x) for x in options.host_names] + [socket.getfqdn("localhost")]) - set([x.hostname for x in api.get_all_hosts()]))
-    if host_list:
-        cm = api.get_cloudera_manager()
-        cmd = cm.host_install(user_name=options.ssh_root_user, host_names=host_list, private_key=options.ssh_private_key)
-        print "Installing agents in cluster '%s' - [ http://%s:7180/cmf/command/%s/details ]" % (socket.getfqdn("localhost"), "localhost", cmd.id)
-        while cmd.success == None:
-            sleep(20)
-            cmd = cmd.fetch()
-            print "Installing hosts..."
-
-        if cmd.success != True:
-            print "cm_host_install failed: " + cmd.resultMessage
-            exit(1)
-
-    print "Agents installed!"
-    hosts = []
-    for host in api.get_all_hosts():
-        if host.hostId not in [x.hostId for x in cluster.list_hosts()]:
-            print "Adding {'ip': '%s', 'hostname': '%s', 'hostId': '%s'}" % (host.ipAddress, host.hostname, host.hostId)
-            hosts.append(host.hostId)
-
-    print "Adding new hosts to cluster..."
-    if hosts:
-        print "Adding hostId(s) to '%s'" % options.cluster_name
-        print "%s" % hosts
-        cluster.add_hosts(hosts)
 
 
 def host_rack():
