@@ -1514,24 +1514,18 @@ class ActiveCommands:
 def main():
     parser=setupArguments()
     options=parser.parse_args()
-    print(options)
 
-    #init_cluster()
+    init_cluster()
 
     '''
     add_hosts_to_cluster()
     deploy_parcel(parcel_product=cmx.parcel[0]['product'], parcel_version=cmx.parcel[0]['version'])
-
     mgmt_roles = ['SERVICEMONITOR', 'ALERTPUBLISHER', 'EVENTSERVER', 'HOSTMONITOR']
     if management.licensed():
         mgmt_roles.append('REPORTSMANAGER')
     management(*mgmt_roles).setup()
     management(*mgmt_roles).start()
-
-    if options.license_file:
-        management.upload_license()
-    else:
-        management.begin_trial()
+    management.begin_trial()
 
     setup_zookeeper()
     setup_hdfs()
