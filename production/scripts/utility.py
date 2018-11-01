@@ -14,39 +14,28 @@ from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 
 def parse_options():
     parser = OptionParser()
-    parser.add_option('-m', '--cm-server', dest='cm_server', type="string", action='callback', callback=cmx_args, help='*Set Cloudera Manager Server Host. ' 'Note: This is the host where the Cloudera Management Services get installed.')
-    parser.add_option('-w', '--host-names', dest='host_names', type="string", action='callback', callback=cmx_args, help='*Set target node(s) list, separate with comma eg: -w host1,host2,...,host(n). ' 'Note:' ' - enclose in double quote, also avoid leaving spaces between commas.' ' - CM_SERVER excluded in this list, if you want install CDH Services in CM_SERVER' ' add the host to this list.')
-    parser.add_option('-n', '--cluster-name', dest='cluster_name', type="string", action='callback', callback=cmx_args, default='Cluster 1', help='Set Cloudera Manager Cluster name enclosed in double quotes. Default "Cluster 1"')
-    parser.add_option('-u', '--ssh-root-user', dest='ssh_root_user', type="string", action='callback', callback=cmx_args, default='root', help='Set target node(s) ssh username. Default root')
-    parser.add_option('-p', '--ssh-root-password', dest='ssh_root_password', type="string", action='callback', callback=cmx_args, help='*Set target node(s) ssh password..')
-    parser.add_option('-k', '--ssh-private-key', dest='ssh_private_key', type="string", action='callback', callback=cmx_args, help='The private key to authenticate with the hosts. ' 'Specify either this or a password.')
-    parser.add_option('-l', '--license-file', dest='license_file', type="string", action='callback', callback=cmx_args, help='Cloudera Manager License file name')
-    parser.add_option('-d', '--teardown', dest='teardown', action="store", type="string", help='Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".')
-    parser.add_option('-a', '--highavailable', dest='highAvailability', action="store_true", default=False, help='Create a High Availability cluster')
-    parser.add_option('-c', '--cm-user', dest='username', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Username')
-    parser.add_option('-s', '--cm-password', dest='password', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Password')
-    parser.add_option('-e', '--accept-eula', dest='accepted', action="store_true", default=False, help='Must accept eula before install')
-    parser.add_option('--vmsize', dest='vmsize', type="string", action="callback", callback=cmx_args, help='provide vmsize for setup')
-    parser.add_option('--diskcount', dest='diskcount', type="string", action="callback", callback=cmx_args, help='number of data disks on each node')
+    parser.add_option('--host_names', dest='host_names', type="string", action='callback', callback=cmx_args, help='Node list, separate with commas: host1,host2,...,host(n)')
+    parser.add_option('--ssh_private_key', dest='ssh_private_key', type="string", action='callback', callback=cmx_args, help='The private key to authenticate with the hosts.')
+    parser.add_option('--username', dest='username', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Username')
+    parser.add_option('--password', dest='password', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Password')
+    parser.add_option('--vm_size', dest='vm_size', type="string", action="callback", callback=cmx_args, help='VM Size for CPU and Memory Setup')
+    parser.add_option('--disk_count', dest='disk_count', type="string", action="callback", callback=cmx_args, help='Number of Data Disks on Each Node')
     (options, args) = parser.parse_args()
 
     global cmx
     global check, cdh, management
 
-    cmx_config_options = {
-        'ssh_root_password': None,
-        'ssh_root_user': 'root',
-        'ssh_private_key': None,
-        'cluster_name': 'Cluster 1',
-        'cluster_version': 'CDH5',
-        'username': 'cmadmin',
-        'password': 'cmpassword',
-        'cm_server': None,
+    options = {
         'host_names': None,
-        'license_file': None,
-        'parcel': [],
-        'vmsize': None,
-        'do_post': True
+        'ssh_private_key': None,
+        'username': 'admin',
+        'password': 'admin',
+        'vm_size': None,
+        'disk_count': 0,
+        'cluster_name': 'cluster',
+        'ssh_root_user': 'opc',
+        'cm_server': 'localhost',
+        'parcel': []
     }
 
     def cmx_args(option, opt_str, value, *args, **kwargs):
@@ -1547,12 +1536,12 @@ def main():
     else:
         management.begin_trial()
 
-    setup_zookeeper(options.highAvailability)
-    setup_hdfs(options.highAvailability)
-    setup_yarn(options.highAvailability)
+    setup_zookeeper()
+    setup_hdfs()
+    setup_yarn()
     setup_spark_on_yarn()
     setup_hive()
-    setup_impala(options.highAvailability)
+    setup_impala()
     setup_oozie()
     setup_hue()
 

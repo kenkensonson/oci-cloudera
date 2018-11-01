@@ -54,14 +54,7 @@ vm_size=$(curl http://169.254.169.254/opc/v1/instance/shape)
 ssh_private_key=~/.ssh/oci
 
 python utility.py \
-  --highavailable \
-  --cluster-name cluster \
-  --ssh-root-user opc \
-  --cm-server localhost \
-  --host-names ${host_names} \
-  --cm-user admin \
-  --cm-password admin \
-  --accept-eula \
-  --vmsize ${vm_size} \
   --ssh-private-key ${ssh_private_key} \
-  --diskcount 5
+  --host-names ${host_names} \
+  --vm_size ${vm_size} \
+  --disk_count 5
