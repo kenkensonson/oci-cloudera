@@ -30,105 +30,31 @@ resource "oci_core_route_table" "route_table" {
   }
 }
 
-resource "oci_core_security_list" "public" {
+resource "oci_core_security_list" "security_list" {
   compartment_id = "${var.compartment_ocid}"
-  display_name   = "public"
+  display_name   = "security_list"
   vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
 
   egress_security_rules = [{
+    protocol    = "All"
     destination = "0.0.0.0/0"
-    protocol    = "6"
   }]
 
   ingress_security_rules = [{
-    tcp_options {
-      "max" = 22
-      "min" = 22
-    }
-
-    protocol = "6"
+    protocol = "All"
     source   = "0.0.0.0/0"
-  }]
-
-  ingress_security_rules = [{
-    tcp_options {
-      "max" = 7180
-      "min" = 7180
-    }
-
-    protocol = "6"
-    source   = "0.0.0.0/0"
-  }]
-
-  ingress_security_rules = [{
-    tcp_options {
-      "max" = 7183
-      "min" = 7183
-    }
-
-    protocol = "6"
-    source   = "0.0.0.0/0"
-  }]
-
-  ingress_security_rules = [{
-    tcp_options {
-      "max" = 19888
-      "min" = 19888
-    }
-
-    protocol = "6"
-    source   = "0.0.0.0/0"
-  }]
-
-  ingress_security_rules = [{
-    protocol = "6"
-    source   = "${var.cidr_block}"
   }]
 }
 
-resource "oci_core_security_list" "private" {
-  compartment_id = "${var.compartment_ocid}"
-  display_name   = "private"
-  vcn_id         = "${oci_core_virtual_network.virtual_network.id}"
-
-  egress_security_rules = [{
-    destination = "0.0.0.0/0"
-    protocol    = "6"
-  }]
-
-  egress_security_rules = [{
-    protocol    = "6"
-    destination = "${var.cidr_block}"
-  }]
-
-  ingress_security_rules = [{
-    protocol = "6"
-    source   = "${var.cidr_block}"
-  }]
-}
-
-resource "oci_core_subnet" "public" {
+resource "oci_core_subnet" "subnet" {
   count               = "3"
   availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
   cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index)}"
-  display_name        = "public${count.index}"
-  dns_label           = "public${count.index}"
+  display_name        = "subnet${count.index}"
+  dns_label           = "subnet${count.index}"
   compartment_id      = "${var.compartment_ocid}"
   vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
   route_table_id      = "${oci_core_route_table.route_table.id}"
-  security_list_ids   = ["${oci_core_security_list.public.id}"]
-  dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
-}
-
-resource "oci_core_subnet" "private" {
-  count               = "3"
-  availability_domain = "${lookup(data.oci_identity_availability_domains.availability_domains.availability_domains[count.index],"name")}"
-  cidr_block          = "${cidrsubnet(var.cidr_block, 8, count.index+3)}"
-  display_name        = "private${count.index}"
-  dns_label           = "private${count.index}"
-  compartment_id      = "${var.compartment_ocid}"
-  vcn_id              = "${oci_core_virtual_network.virtual_network.id}"
-  route_table_id      = "${oci_core_route_table.route_table.id}"
-  security_list_ids   = ["${oci_core_security_list.private.id}"]
+  security_list_ids   = ["${oci_core_security_list.security_list.id}"]
   dhcp_options_id     = "${oci_core_virtual_network.virtual_network.default_dhcp_options_id}"
 }
