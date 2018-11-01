@@ -25,6 +25,21 @@ def setupArguments():
     parser.add_argument('--cm_server', type=str, default='localhost')
     return parser
 
+def wait_for_cm_to_start():
+    retry_count = 5
+    while retry_count > 0:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if not s.connect_ex((socket.gethostbyname(value), 7180)) == 0:
+            print "Cloudera Manager Server is not started on %s " % value
+            s.close()
+            sleep(60)
+        else:
+            break
+        retry_count -= 1
+    if retry_count == 0:
+        print "Couldn't connect to Cloudera Manager after 5 minutes, exiting"
+        exit(1)
+
 def init_cluster(api, options):
     print "> Initialize Cluster"
     cm = api.get_cloudera_manager()
@@ -61,109 +76,6 @@ def add_hosts_to_cluster(api, options):
     print "Adding hosts to cluster..."
     print hosts
     cluster.add_hosts(hosts)
-
-
-
-
-
-def foo():
-    global cmx
-    global check, cdh, management
-
-    def cmx_args(option, opt_str, value, *args, **kwargs):
-        if option.dest == 'host_names':
-            print "switch %s value check: %s" % (opt_str, value)
-            for host in value.split(','):
-                if not hostname_resolves(host):
-                    exit(1)
-            else:
-                cmx_config_options[option.dest] = [
-                    socket.gethostbyname(x) for x in value.split(',')]
-        elif option.dest == 'cm_server':
-            print "switch %s value check: %s" % (opt_str, value)
-            cmx_config_options[option.dest] = socket.gethostbyname(value) if \
-                hostname_resolves(value) else exit(1)
-            retry_count = 5
-            while retry_count > 0:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if not s.connect_ex((socket.gethostbyname(value), 7180)) == 0:
-                    print "Cloudera Manager Server is not started on %s " % value
-                    s.close()
-                    sleep(60)
-                else:
-                    break
-                retry_count -= 1
-            if retry_count == 0:
-                print "Couldn't connect to Cloudera Manager after 5 minutes, exiting"
-                exit(1)
-        elif option.dest == 'ssh_private_key_filename':
-            with open(value, 'r') as f:
-                license_contents = f.read()
-            cmx_config_options[option.dest] = license_contents
-        else:
-            cmx_config_options[option.dest] = value
-
-    def hostname_resolves(hostname):
-        try:
-            if socket.gethostbyname(hostname) == '0.0.0.0':
-                print "Error [{'host': '%s', 'fqdn': '%s'}]" % \
-                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
-                return False
-            else:
-                print "Success [{'host': '%s', 'fqdn': '%s'}]" % \
-                      (socket.gethostbyname(hostname), socket.getfqdn(hostname))
-                return True
-        except socket.error:
-            print "Error 'host': '%s'" % hostname
-            return False
-
-    def manifest_to_dict(manifest_json):
-        if manifest_json:
-            dir_list = json.load(
-                urllib2.urlopen(manifest_json))['parcels'][0]['parcelName']
-            parcel_part = re.match(r"^(.*?)-(.*)-(.*?)$", dir_list).groups()
-            return {'product': str(parcel_part[0]).upper(), 'version': str(parcel_part[1]).lower()}
-        else:
-            raise Exception("Invalid manifest.json")
-
-    cmx_config_options['parcel'].append(manifest_to_dict('http://archive.cloudera.com/cdh5/parcels/5.15.1/manifest.json'))
-
-    msg_req_args = "Please specify the required arguments: "
-    if cmx_config_options['cm_server'] is None:
-        parser.error(msg_req_args + "-m/--cm-server")
-    else:
-        if not (cmx_config_options['ssh_private_key_filename'] or cmx_config_options['ssh_root_password']):
-            parser.error(msg_req_args +
-                         "-p/--ssh-root-password or -k/--ssh-private-key")
-        elif cmx_config_options['host_names'] is None:
-            parser.error(msg_req_args + "-w/--host-names")
-        elif cmx_config_options['ssh_private_key_filename'] and cmx_config_options['ssh_root_password']:
-            parser.error(msg_req_args +
-                         "-p/--ssh-root-password _OR_ -k/--ssh-private-key")
-
-    # Management services password. They are required when adding Management services
-    management = ManagementActions
-    if not (bool(management.get_mgmt_password("ACTIVITYMONITOR")) and bool(management.get_mgmt_password("REPORTSMANAGER"))):
-        exit(1)
-    else:
-        cmx_config_options['amon_password'] = management.get_mgmt_password("ACTIVITYMONITOR")
-        cmx_config_options['rman_password'] = management.get_mgmt_password("REPORTSMANAGER")
-        cmx_config_options['oozie_password'] = management.get_mgmt_password("OOZIE")
-        cmx_config_options['hive_password'] = management.get_mgmt_password("HIVEMETASTORESERVER")
-
-    cmx = type('', (), cmx_config_options)
-    check = ActiveCommands()
-    cdh = ServiceActions
-    if cmx_config_options['cm_server'] and options.teardown:
-        if options.teardown.lower() in ['remove_cluster', 'keep_cluster']:
-            teardown(keep_cluster=(options.teardown.lower() == 'keep_cluster'))
-            print "Bye!"
-            exit(0)
-        else:
-            print 'Teardown Cloudera Manager Cluster. Required arguments "keep_cluster" or "remove_cluster".'
-            exit(1)
-
-    return options
 
 
 def getParameterValue(vmsize, parameter):
@@ -1499,8 +1411,8 @@ def main():
     options.host_names=options.host_names.split(",")
     print(options)
 
+    wait_for_cm_to_start()
     api = ApiResource(server_host="localhost", username="admin", password="admin")
-
     init_cluster(api, options)
     add_hosts_to_cluster(api, options)
 
