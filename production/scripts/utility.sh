@@ -47,14 +47,13 @@ systemctl start cloudera-scm-server
 # Step 7: Set Up a Cluster
 pip install cm_api
 
-#host_names="master[0-99], worker[0-99], edge[0-99], utility[0-99]"
-
+ssh_private_key=~/.ssh/oci
 host_names="worker0,worker1,worker2"
 vm_size=$(curl http://169.254.169.254/opc/v1/instance/shape)
-ssh_private_key=~/.ssh/oci
+disk_count=5
 
 python utility.py \
   --ssh-private-key ${ssh_private_key} \
   --host-names ${host_names} \
   --vm_size ${vm_size} \
-  --disk_count 5
+  --disk_count ${disk_count}

@@ -1,8 +1,9 @@
+import argparse
+
 import socket
 import re
 import urllib
 import urllib2
-from optparse import OptionParser
 import hashlib
 import os
 import sys
@@ -12,31 +13,24 @@ from cm_api.api_client import ApiResource, ApiException
 from cm_api.endpoints.hosts import *
 from cm_api.endpoints.services import ApiServiceSetupInfo, ApiService
 
-def parse_options():
-    parser = OptionParser()
-    parser.add_option('--host_names', dest='host_names', type="string", action='callback', callback=cmx_args, help='Node list, separate with commas: host1,host2,...,host(n)')
-    parser.add_option('--ssh_private_key', dest='ssh_private_key', type="string", action='callback', callback=cmx_args, help='The private key to authenticate with the hosts.')
-    parser.add_option('--username', dest='username', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Username')
-    parser.add_option('--password', dest='password', type="string", action='callback', callback=cmx_args, help='Set Cloudera Manager Password')
-    parser.add_option('--vm_size', dest='vm_size', type="string", action="callback", callback=cmx_args, help='VM Size for CPU and Memory Setup')
-    parser.add_option('--disk_count', dest='disk_count', type="string", action="callback", callback=cmx_args, help='Number of Data Disks on Each Node')
-    (options, args) = parser.parse_args()
+def setupArguments():
+    parser = argparse.ArgumentParser(description='Setup a Cloudera Cluster', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required = parser.add_argument_group('Required named arguments')
 
+    required.add_argument('--host_names', required=True, type=str, help='Node list, separate with commas: host1,host2,...,host(n)')
+    required.add_argument('--ssh_private_key', required=True, type=str, help='The private key to authenticate with the hosts')
+    required.add_argument('--username', required=True, type=str, help='Set Cloudera Manager Username')
+    required.add_argument('--password', required=True, type=str, help='Set Cloudera Manager Password')
+    required.add_argument('--vm_size', required=True, type=str, help='VM Size for CPU and Memory Setup')
+    required.add_argument('--disk_count', required=True, type=int, help='Number of Data Disks on Each Node')
+    parser.add_argument('--cluster_name', type=str, default='cluster')
+    parser.add_argument('--ssh_root_user', type=str, default='opc')
+    parser.add_argument('--cm_server', type=str, default='localhost')
+    return parser
+
+def
     global cmx
     global check, cdh, management
-
-    options = {
-        'host_names': None,
-        'ssh_private_key': None,
-        'username': 'admin',
-        'password': 'admin',
-        'vm_size': None,
-        'disk_count': 0,
-        'cluster_name': 'cluster',
-        'ssh_root_user': 'opc',
-        'cm_server': 'localhost',
-        'parcel': []
-    }
 
     def cmx_args(option, opt_str, value, *args, **kwargs):
         if option.dest == 'host_names':
@@ -1518,8 +1512,11 @@ class ActiveCommands:
                 self._child_cmd(self._api.get("/commands/%s" % resMsg['id'])['children']['items'])
 
 def main():
-    options = parse_options()
-    init_cluster()
+    parser=setupArguments()
+    options=parser.parse_args()
+    print(options)
+
+    #init_cluster()
 
     '''
     add_hosts_to_cluster()
