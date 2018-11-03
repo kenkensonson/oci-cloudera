@@ -45,8 +45,7 @@ done
 systemctl start cloudera-scm-server
 
 # Step 7: Set Up a Cluster
-pip install cm_api # this is the deprecated one
-pip install cm_client # this is the new swagger one
+pip install cm_api
 
 curl -O https://raw.githubusercontent.com/cloud-partners/oci-cloudera/development/development/scripts/utility.py
 ssh_private_key=$(cat ~/.ssh/oci)
