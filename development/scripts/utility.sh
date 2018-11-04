@@ -47,6 +47,9 @@ systemctl start cloudera-scm-server
 # Step 7: Set Up a Cluster
 pip install cm_api
 
+echo $ssh_private_key > ~/.ssh/oci
+chmod 600 ~/.ssh/oci
+
 curl -O https://raw.githubusercontent.com/cloud-partners/oci-cloudera/development/development/scripts/utility.py
 ssh_private_key=$(cat ~/.ssh/oci)
 host_names="worker0,worker1,worker2"
