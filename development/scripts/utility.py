@@ -29,7 +29,7 @@ def wait_for_cm_to_start():
     while retry_count > 0:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if not s.connect_ex((socket.gethostbyname("localhost"), 7180)) == 0:
-            print "Cloudera Manager Server is not started on %s " % value
+            print "Waiting for Cloudera Manager to start..."
             s.close()
             sleep(60)
         else:
